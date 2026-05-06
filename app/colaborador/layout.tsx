@@ -7,7 +7,18 @@ export default async function ColaboradorLayout({ children }: { children: React.
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/login')
-  if (user.user_metadata?.funcao === 'admin') redirect('/admin')
+
+  let funcao = user.user_metadata?.funcao
+  if (!funcao) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('funcao')
+      .eq('id', user.id)
+      .single()
+    funcao = profile?.funcao
+  }
+
+  if (funcao === 'admin') redirect('/admin')
 
   return (
     <div className="min-h-screen bg-gray-50">

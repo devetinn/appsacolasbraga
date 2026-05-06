@@ -7,7 +7,19 @@ export async function POST() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user || user.user_metadata?.funcao !== 'admin') {
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
+    let funcao = user.user_metadata?.funcao
+    if (!funcao) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('funcao')
+        .eq('id', user.id)
+        .single()
+      funcao = profile?.funcao
+    }
+
+    if (funcao !== 'admin') {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
     }
 
