@@ -1,0 +1,50 @@
+import { createClient } from '@/lib/supabase/server'
+import { KpiCard } from '@/components/admin/KpiCard'
+import { ContadorPagamento } from '@/components/admin/ContadorPagamento'
+import { AlertaDivergencias } from '@/components/admin/AlertaDivergencias'
+import type { ProductionEntry } from '@/types'
+
+export default async function AdminDashboard() {
+  const supabase = createClient()
+
+  const { data: quinzena } = await supabase
+    .from('pay_periods')
+    .select('id')
+    .eq('status', 'aberta')
+    .single()
+
+  const { data: entries } = quinzena
+    ? await supabase
+        .from('production_entries')
+        .select('id, quantidade, status, quinzena_id, colaborador_id, parceiro_id, data_producao, marca, tamanho, cores, observacao, created_at, updated_at')
+        .eq('quinzena_id', quinzena.id)
+    : { data: [] }
+
+  const allEntries = (entries ?? []) as ProductionEntry[]
+  const totalUnidades = allEntries
+    .filter((e) => e.status === 'confirmado')
+    .reduce((sum, e) => sum + e.quantidade, 0)
+  const divergencias = allEntries.filter((e) => e.status === 'divergente')
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold text-gray-800">Dashboard</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <KpiCard
+          title="Unidades Confirmadas"
+          value={totalUnidades.toLocaleString('pt-BR')}
+          description="na quinzena atual"
+        />
+        <KpiCard
+          title="Divergências"
+          value={divergencias.length}
+          description={divergencias.length === 1 ? 'pendente de resolução' : 'pendentes de resolução'}
+        />
+        <ContadorPagamento />
+      </div>
+
+      {divergencias.length > 0 && <AlertaDivergencias divergencias={divergencias} />}
+    </div>
+  )
+}
