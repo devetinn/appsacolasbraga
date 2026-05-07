@@ -20,7 +20,7 @@ export default async function ConfiguracoesPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-800">Configurações</h2>
+      <h2 className="font-display font-bold text-brand-dark text-2xl">Configurações</h2>
       <ColaboradoresConfig colaboradoresIniciais={colaboradores ?? []} />
       <ValoresFuncao taxasIniciais={taxas ?? []} />
     </div>
