@@ -34,7 +34,10 @@ export default async function QuinzenaDetalhesPage({ params }: Props) {
           {quinzena.status === 'fechada' ? 'Fechada' : 'Aberta'}
         </span>
       </div>
-      <TabelaLancamentos entries={(entries ?? []) as ProductionEntry[]} />
+      <TabelaLancamentos
+        entries={(entries ?? []) as ProductionEntry[]}
+        readOnly={quinzena.status === 'fechada'}
+      />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import type { ProductionEntry } from '@/types'
 interface TabelaLancamentosProps {
   entries: ProductionEntry[]
   loading?: boolean
+  readOnly?: boolean
 }
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
@@ -14,7 +15,7 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   divergente: { label: 'Divergente', className: 'bg-red-100 text-red-800' },
 }
 
-export function TabelaLancamentos({ entries: initialEntries, loading }: TabelaLancamentosProps) {
+export function TabelaLancamentos({ entries: initialEntries, loading, readOnly = false }: TabelaLancamentosProps) {
   const [entries, setEntries] = useState(initialEntries)
   const [updating, setUpdating] = useState<string | null>(null)
 
@@ -48,7 +49,7 @@ export function TabelaLancamentos({ entries: initialEntries, loading }: TabelaLa
             <th className="px-4 py-3">Tamanho</th>
             <th className="px-4 py-3 text-right">Qtd</th>
             <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3">Ações</th>
+            {!readOnly && <th className="px-4 py-3">Ações</th>}
           </tr>
         </thead>
         <tbody>
@@ -66,7 +67,7 @@ export function TabelaLancamentos({ entries: initialEntries, loading }: TabelaLa
                     {status.label}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                {!readOnly && <td className="px-4 py-3">
                   {entry.status !== 'confirmado' && (
                     <button
                       onClick={() => updateStatus(entry.id, 'confirmado')}
@@ -94,13 +95,13 @@ export function TabelaLancamentos({ entries: initialEntries, loading }: TabelaLa
                       Reverter
                     </button>
                   )}
-                </td>
+                </td>}
               </tr>
             )
           })}
           {entries.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+              <td colSpan={readOnly ? 5 : 6} className="px-4 py-8 text-center text-gray-400">
                 Nenhum lançamento encontrado
               </td>
             </tr>
