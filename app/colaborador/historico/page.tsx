@@ -4,6 +4,7 @@ import { useQuinzenaAtiva } from '@/hooks/useQuinzenaAtiva'
 import { useProducaoColaborador } from '@/hooks/useProducaoColaborador'
 import { ListaHistorico } from '@/components/colaborador/ListaHistorico'
 
+
 export default function Historico() {
   const { quinzena } = useQuinzenaAtiva()
   const { entries, loading } = useProducaoColaborador(quinzena?.id)

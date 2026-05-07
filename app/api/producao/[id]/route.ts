@@ -25,6 +25,48 @@ async function assertAdmin() {
   return funcao === 'admin' ? user : null
 }
 
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
+    const { data: entry, error: fetchError } = await supabase
+      .from('production_entries')
+      .select('colaborador_id, status')
+      .eq('id', params.id)
+      .single()
+
+    if (fetchError || !entry) {
+      return NextResponse.json({ error: 'Lançamento não encontrado' }, { status: 404 })
+    }
+
+    if (entry.colaborador_id !== user.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+    }
+
+    if (entry.status !== 'pendente') {
+      return NextResponse.json(
+        { error: 'Apenas lançamentos pendentes podem ser excluídos.' },
+        { status: 409 }
+      )
+    }
+
+    const { error } = await supabase
+      .from('production_entries')
+      .delete()
+      .eq('id', params.id)
+
+    if (error) throw error
+    return NextResponse.json({ success: true })
+  } catch {
+    return NextResponse.json({ error: 'Erro ao excluir lançamento' }, { status: 500 })
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }

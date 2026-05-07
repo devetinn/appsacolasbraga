@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { ProductionEntry } from '@/types'
 
+export type EntryComParceiro = ProductionEntry & { nome_parceiro?: string }
+
 export function useProducaoColaborador(quinzenaId: string | undefined) {
-  const [entries, setEntries] = useState<ProductionEntry[]>([])
+  const [entries, setEntries] = useState<EntryComParceiro[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
@@ -19,13 +21,19 @@ export function useProducaoColaborador(quinzenaId: string | undefined) {
 
       supabase
         .from('production_entries')
-        .select('*')
+        .select('*, parceiro:users!parceiro_id(nome)')
         .eq('quinzena_id', quinzenaId)
         .eq('colaborador_id', user.id)
         .order('data_producao', { ascending: false })
         .then(({ data, error }) => {
           if (error) setError(new Error('Erro ao buscar produções'))
-          else setEntries(data ?? [])
+          else {
+            const mapped = (data ?? []).map((e) => ({
+              ...(e as ProductionEntry),
+              nome_parceiro: (e as { parceiro?: { nome: string } | null }).parceiro?.nome,
+            }))
+            setEntries(mapped)
+          }
           setLoading(false)
         })
     })

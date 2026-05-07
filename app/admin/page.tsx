@@ -30,6 +30,15 @@ export default async function AdminDashboard() {
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-800">Dashboard</h2>
 
+      {!quinzena && (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center space-y-1">
+          <p className="text-gray-600 font-medium">Nenhuma quinzena aberta</p>
+          <p className="text-sm text-gray-400">
+            Acesse <strong>Quinzena</strong> no menu para abrir um novo período.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KpiCard
           title="Unidades Confirmadas"

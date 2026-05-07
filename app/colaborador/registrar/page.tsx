@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { FormRegistro } from '@/components/colaborador/FormRegistro'
 import { useQuinzenaAtiva } from '@/hooks/useQuinzenaAtiva'
+import { Toast } from '@/components/ui/Toast'
+import { useToast } from '@/hooks/useToast'
 import { useState, useEffect } from 'react'
 import type { User } from '@/types'
 
@@ -11,6 +13,7 @@ export default function RegistrarProducao() {
   const router = useRouter()
   const { quinzena } = useQuinzenaAtiva()
   const [parceiros, setParceiros] = useState<Pick<User, 'id' | 'nome'>[]>([])
+  const { toast, showToast, hideToast } = useToast()
 
   useEffect(() => {
     const supabase = createClient()
@@ -42,11 +45,14 @@ export default function RegistrarProducao() {
     })
 
     if (error) throw error
-    router.push('/colaborador/historico')
+
+    showToast(`${data.quantidade} unidades registradas com sucesso!`, 'success')
+    setTimeout(() => router.push('/colaborador/historico'), 1500)
   }
 
   return (
     <div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
       <h2 className="text-lg font-semibold text-gray-800 mb-4">Registrar Produção</h2>
       <FormRegistro parceiros={parceiros} onSubmit={handleSubmit} />
     </div>

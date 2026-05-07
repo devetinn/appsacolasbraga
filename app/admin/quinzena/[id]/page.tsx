@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { TabelaLancamentos } from '@/components/admin/TabelaLancamentos'
 import { notFound } from 'next/navigation'
 import type { ProductionEntry } from '@/types'
+import { formatDate } from '@/lib/format'
 
 interface Props {
   params: { id: string }
@@ -28,7 +29,7 @@ export default async function QuinzenaDetalhesPage({ params }: Props) {
     <div className="space-y-4">
       <div>
         <h2 className="text-xl font-semibold text-gray-800">
-          Quinzena {quinzena.data_inicio} – {quinzena.data_fim}
+          Quinzena {formatDate(quinzena.data_inicio)} – {formatDate(quinzena.data_fim)}
         </h2>
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 mt-1">
           {quinzena.status === 'fechada' ? 'Fechada' : 'Aberta'}

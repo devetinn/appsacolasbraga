@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { FormNovaQuinzena } from '@/components/admin/FormNovaQuinzena'
 import { BotaoFecharQuinzena } from '@/components/admin/BotaoFecharQuinzena'
+import { formatDate } from '@/lib/format'
 
 export default async function QuinzenaPage() {
   const supabase = createClient()
@@ -31,9 +32,9 @@ export default async function QuinzenaPage() {
             </span>
           </div>
           <div className="text-sm text-gray-600 space-y-1">
-            <p>Início: <strong>{quinzenaAtiva.data_inicio}</strong></p>
-            <p>Fim: <strong>{quinzenaAtiva.data_fim}</strong></p>
-            <p>Pagamento: <strong>{quinzenaAtiva.data_pagamento}</strong></p>
+            <p>Início: <strong>{formatDate(quinzenaAtiva.data_inicio)}</strong></p>
+            <p>Fim: <strong>{formatDate(quinzenaAtiva.data_fim)}</strong></p>
+            <p>Pagamento: <strong>{formatDate(quinzenaAtiva.data_pagamento)}</strong></p>
           </div>
           <BotaoFecharQuinzena />
         </div>
@@ -52,7 +53,7 @@ export default async function QuinzenaPage() {
                   className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
                   <span className="text-sm text-gray-700">
-                    {q.data_inicio} – {q.data_fim}
+                    {formatDate(q.data_inicio)} – {formatDate(q.data_fim)}
                   </span>
                   <span className="text-xs text-gray-400">Ver detalhes →</span>
                 </Link>

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { diasAteProximoPagamento, formatarData } from '@/lib/quinzena'
+import { diasAteProximoPagamento } from '@/lib/quinzena'
+import { formatDate } from '@/lib/format'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -48,8 +49,8 @@ export default async function ColaboradorDashboard() {
             <p className="text-xs text-gray-500">Quinzena</p>
             {quinzenaAtiva ? (
               <p className="text-sm font-medium text-gray-800">
-                {formatarData(quinzenaAtiva.data_inicio).slice(0, 5)} –{' '}
-                {formatarData(quinzenaAtiva.data_fim).slice(0, 5)}
+                {formatDate(quinzenaAtiva.data_inicio).slice(0, 5)} –{' '}
+                {formatDate(quinzenaAtiva.data_fim).slice(0, 5)}
               </p>
             ) : (
               <p className="text-sm text-gray-400">Nenhuma aberta</p>
