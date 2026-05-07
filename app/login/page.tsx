@@ -46,9 +46,9 @@ export default function LoginPage() {
     <main className="min-h-screen flex flex-col items-center justify-center bg-brand-cream px-6">
 
       {/* Logo */}
-      <div className="flex flex-col items-center gap-4 mb-10">
+      <div className="flex flex-col items-center gap-2 mb-8">
         <Logo size="xl" variant="full" />
-        <p className="text-xs font-sans font-semibold uppercase tracking-widest text-brand-dark/35">
+        <p className="text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-dark/30">
           Sistema de Produção
         </p>
       </div>
