@@ -16,7 +16,7 @@ export function BotaoLogout() {
   return (
     <button
       onClick={handleLogout}
-      className="text-sm text-gray-500 hover:text-red-600 transition-colors"
+      className="text-xs font-sans font-semibold uppercase tracking-wider text-brand-dark/40 hover:text-red-500 transition-colors px-2 py-1"
     >
       Sair
     </button>

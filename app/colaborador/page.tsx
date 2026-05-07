@@ -2,8 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { diasAteProximoPagamento } from '@/lib/quinzena'
 import { formatDate } from '@/lib/format'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 
 export default async function ColaboradorDashboard() {
   const supabase = createClient()
@@ -32,55 +30,84 @@ export default async function ColaboradorDashboard() {
   const nome = user?.user_metadata?.nome ?? 'Colaborador'
 
   return (
-    <div className="space-y-4 pt-2">
-      <p className="text-gray-600 text-sm">
-        Olá, <strong>{nome}</strong>!
-      </p>
+    <div className="space-y-5">
 
+      {/* Saudação */}
+      <div>
+        <p className="text-xs font-sans font-semibold uppercase tracking-widest text-brand-dark/35">
+          Bem-vindo
+        </p>
+        <h2 className="font-display font-bold text-brand-dark text-xl mt-0.5">{nome}</h2>
+      </div>
+
+      {/* Cards de métricas */}
       <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <CardContent className="pt-4">
-            <p className="text-xs text-gray-500">Pagamento em</p>
-            <p className="text-2xl font-bold text-blue-600">{dias}d</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <p className="text-xs text-gray-500">Quinzena</p>
-            {quinzenaAtiva ? (
-              <p className="text-sm font-medium text-gray-800">
-                {formatDate(quinzenaAtiva.data_inicio).slice(0, 5)} –{' '}
-                {formatDate(quinzenaAtiva.data_fim).slice(0, 5)}
-              </p>
-            ) : (
-              <p className="text-sm text-gray-400">Nenhuma aberta</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <p className="text-xs text-gray-500">Unidades registradas</p>
-            <p className="text-2xl font-bold text-gray-800">{totalRegistradas.toLocaleString('pt-BR')}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <p className="text-xs text-gray-500">Confirmadas</p>
-            <p className="text-2xl font-bold text-green-600">{totalConfirmadas.toLocaleString('pt-BR')}</p>
-          </CardContent>
-        </Card>
+
+        {/* Pagamento */}
+        <div className="bg-brand-blue rounded-3xl p-5 col-span-1">
+          <p className="text-[10px] font-sans font-semibold uppercase tracking-widest text-white/60">
+            Pagamento em
+          </p>
+          <p className="font-display font-bold text-white text-4xl mt-2 leading-none">
+            {dias}
+            <span className="text-xl ml-1 font-sans font-semibold opacity-70">d</span>
+          </p>
+        </div>
+
+        {/* Quinzena */}
+        <div className="bg-white rounded-3xl p-5 border border-black/[0.05]">
+          <p className="text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-dark/35">
+            Quinzena
+          </p>
+          {quinzenaAtiva ? (
+            <p className="font-display font-bold text-brand-dark text-sm mt-2 leading-tight">
+              {formatDate(quinzenaAtiva.data_inicio).slice(0, 5)}
+              <span className="text-brand-dark/30 mx-1">–</span>
+              {formatDate(quinzenaAtiva.data_fim).slice(0, 5)}
+            </p>
+          ) : (
+            <p className="text-xs font-sans text-brand-dark/30 mt-2">Nenhuma aberta</p>
+          )}
+        </div>
+
+        {/* Registradas */}
+        <div className="bg-white rounded-3xl p-5 border border-black/[0.05]">
+          <p className="text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-dark/35">
+            Registradas
+          </p>
+          <p className="font-display font-bold text-brand-dark text-3xl mt-2 leading-none">
+            {totalRegistradas.toLocaleString('pt-BR')}
+          </p>
+        </div>
+
+        {/* Confirmadas */}
+        <div className="bg-white rounded-3xl p-5 border border-brand-gold/20">
+          <p className="text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-gold/70">
+            Confirmadas
+          </p>
+          <p className="font-display font-bold text-brand-gold text-3xl mt-2 leading-none">
+            {totalConfirmadas.toLocaleString('pt-BR')}
+          </p>
+        </div>
+
       </div>
 
-      <div className="space-y-2 pt-2">
+      {/* CTA principal */}
+      {quinzenaAtiva ? (
         <Link href="/colaborador/registrar">
-          <Button className="w-full" disabled={!quinzenaAtiva}>
-            {quinzenaAtiva ? '+ Registrar Produção' : 'Sem quinzena aberta'}
-          </Button>
+          <div className="w-full bg-brand-dark text-white rounded-3xl py-4 px-5 flex items-center justify-between group hover:bg-brand-dark/90 transition-all active:scale-[0.99]">
+            <span className="font-sans font-semibold text-sm">Registrar Produção</span>
+            <span className="text-white/40 group-hover:text-white/70 transition-colors text-lg leading-none">→</span>
+          </div>
         </Link>
-        <Link href="/colaborador/historico">
-          <Button variant="outline" className="w-full">Ver Histórico</Button>
-        </Link>
-      </div>
+      ) : (
+        <div className="w-full bg-brand-dark/5 rounded-3xl py-4 px-5 border border-dashed border-brand-dark/15">
+          <p className="font-sans font-medium text-sm text-brand-dark/40 text-center">
+            Nenhuma quinzena aberta
+          </p>
+        </div>
+      )}
+
     </div>
   )
 }

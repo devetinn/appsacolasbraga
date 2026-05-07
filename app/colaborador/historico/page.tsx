@@ -1,33 +1,42 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuinzenaAtiva } from '@/hooks/useQuinzenaAtiva'
 import { useProducaoColaborador } from '@/hooks/useProducaoColaborador'
 import { ListaHistorico } from '@/components/colaborador/ListaHistorico'
-
+import { SeletorDataSemana } from '@/components/colaborador/SeletorDataSemana'
 
 export default function Historico() {
   const { quinzena } = useQuinzenaAtiva()
   const { entries, loading } = useProducaoColaborador(quinzena?.id)
+  const [dataSelecionada, setDataSelecionada] = useState<string | null>(null)
 
-  const totalConfirmadas = entries
+  const entriesFiltrados = dataSelecionada
+    ? entries.filter((e) => e.data_producao === dataSelecionada)
+    : entries
+
+  const totalConfirmadas = entriesFiltrados
     .filter((e) => e.status === 'confirmado')
     .reduce((sum, e) => sum + e.quantidade, 0)
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-800">Histórico da Quinzena</h2>
-        <span className="text-sm text-gray-500">{entries.length} registros</span>
-      </div>
+    <div className="space-y-5">
+
+      <SeletorDataSemana dataSelecionada={dataSelecionada} onSelect={setDataSelecionada} />
 
       {totalConfirmadas > 0 && (
-        <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
-          <p className="text-xs text-blue-600">Unidades confirmadas</p>
-          <p className="text-xl font-bold text-blue-700">{totalConfirmadas.toLocaleString('pt-BR')}</p>
+        <div className="rounded-3xl bg-brand-gold/8 border border-brand-gold/20 px-5 py-4">
+          <p className="text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-gold/70">
+            Unidades confirmadas
+            {dataSelecionada ? ' no dia' : ' na quinzena'}
+          </p>
+          <p className="font-display font-bold text-brand-gold text-3xl mt-1 leading-none">
+            {totalConfirmadas.toLocaleString('pt-BR')}
+          </p>
         </div>
       )}
 
-      <ListaHistorico entries={entries} loading={loading} />
+      <ListaHistorico entries={entriesFiltrados} loading={loading} />
     </div>
   )
 }

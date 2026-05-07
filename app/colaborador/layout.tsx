@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { Logo } from '@/components/ui/Logo'
+import { BotaoLogout } from '@/components/ui/BotaoLogout'
 import { NavColaborador } from '@/components/colaborador/NavColaborador'
 
 export default async function ColaboradorLayout({ children }: { children: React.ReactNode }) {
@@ -21,12 +23,15 @@ export default async function ColaboradorLayout({ children }: { children: React.
   if (funcao === 'admin') redirect('/admin')
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-gray-800">Sacolas Braga</h1>
-        <NavColaborador />
+    <div className="min-h-screen bg-brand-cream flex flex-col">
+      <header className="px-5 pt-5 pb-3 flex items-center justify-between">
+        <Logo size="sm" />
+        <BotaoLogout />
       </header>
-      <main className="p-4 max-w-lg mx-auto">{children}</main>
+      <main className="flex-1 px-4 pt-3 pb-28 max-w-lg mx-auto w-full">
+        {children}
+      </main>
+      <NavColaborador />
     </div>
   )
 }

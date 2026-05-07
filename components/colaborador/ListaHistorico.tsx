@@ -14,9 +14,9 @@ interface ListaHistoricoProps {
 }
 
 const STATUS_CONFIG = {
-  pendente: { label: 'Pendente', className: 'bg-yellow-100 text-yellow-700' },
-  confirmado: { label: 'Confirmado', className: 'bg-green-100 text-green-700' },
-  divergente: { label: 'Divergente', className: 'bg-red-100 text-red-700' },
+  pendente:   { label: 'Pendente',   className: 'bg-amber-50 text-amber-700 border border-amber-200/60' },
+  confirmado: { label: 'Confirmado', className: 'bg-green-50 text-green-700 border border-green-200/60' },
+  divergente: { label: 'Divergente', className: 'bg-red-50 text-red-600 border border-red-200/60' },
 }
 
 export function ListaHistorico({ entries: initialEntries, loading }: ListaHistoricoProps) {
@@ -39,13 +39,23 @@ export function ListaHistorico({ entries: initialEntries, loading }: ListaHistor
     setModalId(null)
   }
 
-  if (loading) return <p className="text-gray-500 text-sm text-center py-4">Carregando...</p>
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white/60 rounded-3xl h-20 animate-pulse" />
+        ))}
+      </div>
+    )
+  }
 
   if (entries.length === 0) {
     return (
-      <div className="text-center py-12 space-y-2">
-        <p className="text-gray-400 text-sm">Nenhum lançamento nesta quinzena.</p>
-        <p className="text-gray-400 text-xs">Registre sua produção para ela aparecer aqui.</p>
+      <div className="text-center py-14 space-y-2">
+        <p className="font-sans font-medium text-brand-dark/40">Nenhum lançamento encontrado.</p>
+        <p className="text-sm font-sans text-brand-dark/25">
+          Registre sua produção para ela aparecer aqui.
+        </p>
       </div>
     )
   }
@@ -65,38 +75,42 @@ export function ListaHistorico({ entries: initialEntries, loading }: ListaHistor
           carregando={deletando === modalId}
         />
       )}
-      <ul className="space-y-3">
+
+      <ul className="space-y-2.5">
         {entries.map((entry) => {
           const status = STATUS_CONFIG[entry.status]
           return (
-            <li key={entry.id} className="rounded-lg border border-gray-200 bg-white p-3">
-              <div className="flex items-start justify-between mb-1">
-                <div>
-                  <span className="text-sm font-medium text-gray-700">{formatDate(entry.data_producao)}</span>
-                  <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${status.className}`}>
-                    {status.label}
-                  </span>
+            <li key={entry.id} className="rounded-3xl bg-white border border-black/[0.05] p-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1.5 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-sans font-semibold text-brand-dark/40">
+                      {formatDate(entry.data_producao)}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-semibold ${status.className}`}>
+                      {status.label}
+                    </span>
+                  </div>
+                  <p className="font-display font-bold text-brand-dark text-lg leading-tight">
+                    {entry.quantidade.toLocaleString('pt-BR')}
+                    <span className="text-sm font-sans font-normal text-brand-dark/40 ml-1">unid.</span>
+                  </p>
+                  <p className="text-xs font-sans text-brand-dark/45">
+                    {entry.marca} · {entry.tamanho} · {entry.cores} cor{entry.cores > 1 ? 'es' : ''}
+                    {entry.nome_parceiro ? ` · ${entry.nome_parceiro}` : ''}
+                  </p>
                 </div>
                 {entry.status === 'pendente' && (
                   <button
                     onClick={() => setModalId(entry.id)}
                     disabled={deletando === entry.id}
-                    className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
-                    title="Excluir lançamento"
+                    className="ml-3 mt-0.5 p-2 rounded-xl text-brand-dark/20 hover:text-red-400 hover:bg-red-50 transition-all disabled:opacity-30"
+                    title="Excluir"
                   >
-                    <Trash2 size={15} />
+                    <Trash2 size={14} strokeWidth={1.75} />
                   </button>
                 )}
               </div>
-              <p className="text-sm text-gray-500">
-                {entry.marca} · {entry.tamanho} · {entry.cores} cor{entry.cores > 1 ? 'es' : ''}
-              </p>
-              {entry.nome_parceiro && (
-                <p className="text-xs text-gray-400 mt-0.5">Parceiro: {entry.nome_parceiro}</p>
-              )}
-              <p className="text-base font-semibold text-gray-900 mt-1">
-                {entry.quantidade.toLocaleString('pt-BR')} unidades
-              </p>
             </li>
           )
         })}
