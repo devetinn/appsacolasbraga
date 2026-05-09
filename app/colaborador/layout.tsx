@@ -24,11 +24,11 @@ export default async function ColaboradorLayout({ children }: { children: React.
 
   return (
     <div className="min-h-screen bg-brand-cream flex flex-col">
-      <header className="px-5 pt-2 pb-2 flex items-center justify-between">
+      <header className="px-5 h-12 flex items-center justify-between shrink-0">
         <Logo size="sm" />
         <BotaoLogout />
       </header>
-      <main className="flex-1 px-4 pt-2 pb-28 max-w-lg mx-auto w-full overflow-x-hidden">
+      <main className="flex-1 px-4 pb-28 max-w-lg mx-auto w-full overflow-x-hidden">
         {children}
       </main>
       <NavColaborador />

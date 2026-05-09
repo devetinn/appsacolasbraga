@@ -1,60 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 
-function playRevealSound() {
-  try {
-    type WA = typeof window & { webkitAudioContext?: typeof AudioContext }
-    const Ctx = window.AudioContext ?? (window as WA).webkitAudioContext
-    if (!Ctx) return
-    const ctx = new Ctx()
-
-    // Acorde maior ascendente C5-E5-G5 — efeito de revelação
-    const notes: [number, number][] = [[523.25, 0], [659.25, 0.13], [783.99, 0.26]]
-    notes.forEach(([freq, delay]) => {
-      const osc  = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.type = 'sine'
-      osc.frequency.value = freq
-      const t = ctx.currentTime + delay
-      gain.gain.setValueAtTime(0, t)
-      gain.gain.linearRampToValueAtTime(0.13, t + 0.04)
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55)
-      osc.start(t)
-      osc.stop(t + 0.6)
-    })
-  } catch { /* sem suporte → silêncio */ }
-}
-
 export default function LoginPage() {
   const router = useRouter()
-  const [logoIn,  setLogoIn]  = useState(false)
-  const [cardIn,  setCardIn]  = useState(false)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
   const [showPwd, setShowPwd] = useState(false)
-
-  useEffect(() => {
-    // Pula animação se o usuário já viu nesta sessão (ex: voltar ao login após erro)
-    if (sessionStorage.getItem('sb-splash')) {
-      setLogoIn(true)
-      setCardIn(true)
-      return
-    }
-
-    const t1 = setTimeout(() => { setLogoIn(true); playRevealSound() }, 200)
-    const t2 = setTimeout(() => {
-      setCardIn(true)
-      sessionStorage.setItem('sb-splash', '1')
-    }, 2300)
-
-    return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -94,31 +49,20 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen w-full bg-brand-blue flex flex-col overflow-hidden">
 
-      {/* ── Logo ── */}
+      {/* Logo centrado na parte superior */}
       <div className="flex-1 flex items-center justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/logo-mask.png"
           alt="Sacolas Braga"
-          width={260}
-          height={260}
-          style={{
-            mixBlendMode: 'screen',
-            opacity:    logoIn ? 1 : 0,
-            transform:  logoIn ? 'scale(1)' : 'scale(0.6)',
-            transition: 'opacity 0.9s cubic-bezier(0.34,1.56,0.64,1), transform 0.9s cubic-bezier(0.34,1.56,0.64,1)',
-          }}
+          width={240}
+          height={240}
+          style={{ mixBlendMode: 'screen' }}
         />
       </div>
 
-      {/* ── Card de login ── sobe do fundo */}
-      <div
-        style={{
-          transform:  cardIn ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.65s cubic-bezier(0.22,1,0.36,1)',
-        }}
-        className="bg-white rounded-t-4xl shadow-2xl"
-      >
+      {/* Card de login — sempre visível, sem delay */}
+      <div className="bg-white rounded-t-4xl shadow-2xl">
         <form onSubmit={handleSubmit} className="px-6 pt-8 pb-10 space-y-5">
 
           {/* Email */}
