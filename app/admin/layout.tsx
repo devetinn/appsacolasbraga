@@ -23,11 +23,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen bg-brand-cream">
-      <header className="bg-white border-b border-black/[0.06] px-6 py-3 flex items-center justify-between sticky top-0 z-30">
+      <header className="bg-white border-b border-black/[0.06] px-5 py-2 flex items-center justify-between sticky top-0 z-30">
         <Logo size="sm" />
         <NavAdmin />
       </header>
-      <main className="p-6 max-w-6xl mx-auto">{children}</main>
+      <main className="px-4 py-4 max-w-6xl mx-auto">{children}</main>
     </div>
   )
 }
