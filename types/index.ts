@@ -26,13 +26,15 @@ export interface PayPeriod {
 
 export interface PaymentRate {
   id: string
-  funcao: 'pintor' | 'ajudante'
+  funcao: 'ajudante' | 'impressor'
   valor_unitario: number
   vigencia_inicio: string
   vigencia_fim?: string
-  criado_por: string
+  criado_por?: string
   created_at: string
 }
+
+export type Turno = 'manha' | 'tarde' | 'unico'
 
 export interface ProductionEntry {
   id: string
@@ -40,6 +42,7 @@ export interface ProductionEntry {
   colaborador_id: string
   parceiro_id: string
   data_producao: string
+  turno: Turno
   marca: string
   tamanho: string
   cores: number

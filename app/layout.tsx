@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Roboto_Slab, DM_Sans } from 'next/font/google'
 import './globals.css'
 
@@ -14,9 +14,29 @@ const sans = DM_Sans({
   weight: ['400', '500', '600', '700'],
 })
 
+export const viewport: Viewport = {
+  themeColor: '#1C22FF',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
+
 export const metadata: Metadata = {
   title: 'Sacolas Braga',
   description: 'Sistema de Gestão de Produção',
+  manifest: '/manifest.json',
+  icons: {
+    apple: '/icons/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Sacolas Braga',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

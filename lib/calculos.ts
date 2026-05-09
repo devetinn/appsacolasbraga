@@ -5,6 +5,18 @@ export interface PayoutCalculo {
   valor_total: number
 }
 
+/**
+ * Calcula o valor de produção aplicando a regra de benefício de faixa:
+ * 500–999 unidades → paga como 1 milheiro cheio (valorPorMilheiro).
+ * Fora da faixa → proporcional (quantidade / 1000 × valorPorMilheiro).
+ */
+export function calcularValorProducao(quantidade: number, valorPorMilheiro: number): number {
+  if (quantidade >= 500 && quantidade < 1000) {
+    return valorPorMilheiro
+  }
+  return (quantidade / 1000) * valorPorMilheiro
+}
+
 export function calcularPayouts(
   entries: { colaborador_id: string; quantidade: number; status: string }[],
   rates: { funcao: string; valor_unitario: number }[],
@@ -29,7 +41,7 @@ export function calcularPayouts(
       colaborador_id,
       total_unidades,
       valor_unitario: rate.valor_unitario,
-      valor_total: total_unidades * rate.valor_unitario,
+      valor_total: calcularValorProducao(total_unidades, rate.valor_unitario),
     })
   })
 

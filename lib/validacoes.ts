@@ -6,6 +6,9 @@ export interface EntryForValidation {
   parceiro_id: string
   quantidade: number
   data_producao: string
+  turno: string
+  marca: string
+  tamanho: string
 }
 
 export function validarCruzamento(
@@ -18,7 +21,10 @@ export function validarCruzamento(
       (e) =>
         e.colaborador_id === entry.parceiro_id &&
         e.parceiro_id === entry.colaborador_id &&
-        e.data_producao === entry.data_producao
+        e.data_producao === entry.data_producao &&
+        e.turno === entry.turno &&
+        e.marca.toLowerCase() === entry.marca.toLowerCase() &&
+        e.tamanho.toLowerCase() === entry.tamanho.toLowerCase()
     )
 
     if (!par) {

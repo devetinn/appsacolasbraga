@@ -4,8 +4,15 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
+const TURNOS = [
+  { value: 'unico',  label: 'Único',  desc: 'Mesmo parceiro o dia todo' },
+  { value: 'manha',  label: 'Manhã',  desc: 'Turno da manhã' },
+  { value: 'tarde',  label: 'Tarde',  desc: 'Turno da tarde' },
+] as const
+
 const schema = z.object({
   data_producao: z.string().min(1, 'Data é obrigatória'),
+  turno: z.enum(['unico', 'manha', 'tarde']),
   marca: z.string().min(1, 'Marca é obrigatória'),
   tamanho: z.string().min(1, 'Tamanho é obrigatório'),
   cores: z.coerce.number().int().min(1, 'Mínimo 1 cor'),
@@ -37,21 +44,53 @@ const inputClass = 'w-full rounded-xl border border-black/[0.08] bg-brand-cream 
 export function FormRegistro({ parceiros, onSubmit }: FormRegistroProps) {
   const today = new Date().toISOString().split('T')[0]
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } =
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting }, reset } =
     useForm<FormData>({
       resolver: zodResolver(schema),
-      defaultValues: { data_producao: today, cores: 1 },
+      defaultValues: { data_producao: today, turno: 'unico', cores: 1 },
     })
+
+  const turnoAtual = watch('turno')
 
   async function handleFormSubmit(data: FormData) {
     await onSubmit(data)
-    reset({ data_producao: today, cores: 1 })
+    reset({ data_producao: today, turno: 'unico', cores: 1 })
   }
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+
       <Field label="Data" error={errors.data_producao?.message}>
         <input type="date" {...register('data_producao')} className={inputClass} />
+      </Field>
+
+      {/* Seletor de turno — botões segmentados */}
+      <Field label="Turno" error={errors.turno?.message}>
+        <div className="grid grid-cols-3 gap-2">
+          {TURNOS.map(({ value, label, desc }) => {
+            const ativo = turnoAtual === value
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setValue('turno', value, { shouldValidate: true })}
+                className={`flex flex-col items-center py-3 px-2 rounded-xl border transition-all ${
+                  ativo
+                    ? 'bg-brand-blue border-brand-blue text-white'
+                    : 'bg-brand-cream border-black/[0.08] text-brand-dark/60 hover:border-brand-dark/20'
+                }`}
+              >
+                <span className={`text-sm font-sans font-bold leading-none ${ativo ? 'text-white' : 'text-brand-dark'}`}>
+                  {label}
+                </span>
+                <span className={`text-[9px] font-sans mt-1 text-center leading-tight ${ativo ? 'text-white/70' : 'text-brand-dark/35'}`}>
+                  {desc}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        <input type="hidden" {...register('turno')} />
       </Field>
 
       <Field label="Marca" error={errors.marca?.message}>

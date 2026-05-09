@@ -45,11 +45,11 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white flex flex-col px-6 pt-14 pb-10">
+    <main className="min-h-screen w-full bg-white flex flex-col px-6 pt-10 pb-10 overflow-x-hidden">
       <div className="w-full max-w-sm mx-auto flex flex-col flex-1">
 
         {/* Logo */}
-        <div className="mb-10">
+        <div className="mb-6">
           <Image
             src="/logo-sacolas-braga.png"
             alt="Sacolas Braga"
@@ -60,7 +60,7 @@ export default function LoginPage() {
         </div>
 
         {/* Heading */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="font-display font-bold text-brand-dark text-[2rem] leading-tight mb-2">
             Bem-vindo<br />de volta!
           </h1>

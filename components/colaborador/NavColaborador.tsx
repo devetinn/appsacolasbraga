@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Calendar, Plus } from 'lucide-react'
+import { ClipboardList, PlusCircle, Clock } from 'lucide-react'
 
 const LINKS = [
-  { href: '/colaborador',           label: 'Início',    icon: Home },
-  { href: '/colaborador/registrar', label: 'Registrar', icon: Plus },
-  { href: '/colaborador/historico', label: 'Histórico', icon: Calendar },
+  { href: '/colaborador/registrar', label: 'Registrar', icon: PlusCircle   },
+  { href: '/colaborador/producoes', label: 'Produções', icon: ClipboardList },
+  { href: '/colaborador/historico', label: 'Histórico', icon: Clock        },
 ]
 
 export function NavColaborador() {
@@ -17,9 +17,7 @@ export function NavColaborador() {
     <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-sm border-t border-black/[0.06] px-2 pt-2 pb-6 z-40">
       <div className="flex justify-around max-w-lg mx-auto">
         {LINKS.map(({ href, label, icon: Icon }) => {
-          const ativo = href === '/colaborador'
-            ? pathname === '/colaborador'
-            : pathname.startsWith(href)
+          const ativo = pathname.startsWith(href)
           return (
             <Link
               key={href}

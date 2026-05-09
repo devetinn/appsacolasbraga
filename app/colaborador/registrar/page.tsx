@@ -1,17 +1,18 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { FormRegistro } from '@/components/colaborador/FormRegistro'
+import { BannerMetricas } from '@/components/colaborador/BannerMetricas'
 import { useQuinzenaAtiva } from '@/hooks/useQuinzenaAtiva'
+import { useMetricasQuinzena } from '@/hooks/useMetricasQuinzena'
 import { Toast } from '@/components/ui/Toast'
 import { useToast } from '@/hooks/useToast'
 import { useState, useEffect } from 'react'
 import type { User } from '@/types'
 
 export default function RegistrarProducao() {
-  const router = useRouter()
   const { quinzena } = useQuinzenaAtiva()
+  const metricas = useMetricasQuinzena(quinzena?.id)
   const [parceiros, setParceiros] = useState<Pick<User, 'id' | 'nome'>[]>([])
   const { toast, showToast, hideToast } = useToast()
 
@@ -27,6 +28,7 @@ export default function RegistrarProducao() {
 
   async function handleSubmit(data: {
     data_producao: string
+    turno: 'unico' | 'manha' | 'tarde'
     marca: string
     tamanho: string
     cores: number
@@ -46,15 +48,25 @@ export default function RegistrarProducao() {
 
     if (error) throw error
 
-    showToast(`${data.quantidade} unidades registradas com sucesso!`, 'success')
-    setTimeout(() => router.push('/colaborador/historico'), 1500)
+    showToast(`${data.quantidade} unidades registradas!`, 'success')
+    metricas.refresh()
   }
 
   return (
-    <div>
+    <div className="space-y-5">
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Registrar Produção</h2>
-      <FormRegistro parceiros={parceiros} onSubmit={handleSubmit} />
+
+      <BannerMetricas {...metricas} />
+
+      {quinzena ? (
+        <FormRegistro parceiros={parceiros} onSubmit={handleSubmit} />
+      ) : (
+        <div className="rounded-3xl border border-dashed border-brand-dark/15 bg-brand-dark/[0.02] py-12 text-center">
+          <p className="text-sm font-sans font-medium text-brand-dark/40">
+            Nenhuma quinzena aberta no momento
+          </p>
+        </div>
+      )}
     </div>
   )
 }
