@@ -28,7 +28,10 @@ export function BotaoFecharQuinzena() {
     }
 
     setMostrarModal(false)
-    showToast('Quinzena fechada com sucesso!', 'success')
+    const msg = json.aviso
+      ? `Quinzena fechada! ⚠️ ${json.aviso}`
+      : 'Quinzena fechada com sucesso!'
+    showToast(msg, json.aviso ? 'error' : 'success')
     router.refresh()
   }
 

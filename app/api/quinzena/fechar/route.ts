@@ -33,12 +33,7 @@ export async function POST() {
       return NextResponse.json({ error: 'Nenhuma quinzena aberta' }, { status: 400 })
     }
 
-    const [{ count: divergencias }, { data: entries }, { data: users }, { data: rates }, { data: payoutsExistentes }] = await Promise.all([
-      supabase
-        .from('production_entries')
-        .select('id', { count: 'exact', head: true })
-        .eq('quinzena_id', quinzena.id)
-        .eq('status', 'divergente'),
+    const [{ data: entries }, { data: users }, { data: rates }, { data: payoutsExistentes }] = await Promise.all([
       supabase
         .from('production_entries')
         .select('colaborador_id, quantidade, status')
@@ -48,16 +43,13 @@ export async function POST() {
       supabase.from('payouts').select('colaborador_id').eq('quinzena_id', quinzena.id),
     ])
 
-    if (divergencias && divergencias > 0) {
-      return NextResponse.json(
-        { error: `Existem ${divergencias} lançamento(s) com divergência pendente. Resolva antes de fechar.` },
-        { status: 409 }
-      )
-    }
-
     // Exclui colaboradores que já foram fechados individualmente
     const jaFechados = new Set((payoutsExistentes ?? []).map((p) => p.colaborador_id))
     const entriesPendentes = (entries ?? []).filter((e) => !jaFechados.has(e.colaborador_id))
+
+    // Conta divergências apenas entre quem ainda não foi fechado
+    // (divergente é excluído do cálculo, não bloqueia mais o fechamento geral)
+    const divergencias = entriesPendentes.filter((e) => e.status === 'divergente').length
 
     const payouts = calcularPayouts(entriesPendentes, rates ?? [], users ?? [])
 
@@ -78,7 +70,13 @@ export async function POST() {
 
     if (updateError) throw updateError
 
-    return NextResponse.json({ success: true, payouts_gerados: payouts.length })
+    return NextResponse.json({
+      success: true,
+      payouts_gerados: payouts.length,
+      ...(divergencias > 0 && {
+        aviso: `${divergencias} lançamento(s) com divergência foram ignorados. Resolva-os manualmente.`,
+      }),
+    })
   } catch {
     return NextResponse.json({ error: 'Erro ao fechar quinzena' }, { status: 500 })
   }
