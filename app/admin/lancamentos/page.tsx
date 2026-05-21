@@ -32,7 +32,7 @@ export default async function LancamentosPage() {
   ] = await Promise.all([
     supabase
       .from('production_entries')
-      .select('*, users(nome)')
+      .select('*, users!colaborador_id(nome)')
       .eq('quinzena_id', quinzena.id)
       .order('created_at', { ascending: false }),
     supabase.from('users').select('id, nome, funcao').neq('funcao', 'admin'),
