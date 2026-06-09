@@ -64,6 +64,9 @@ export interface Payout {
   pago_em?: string
   pago_por?: string
   observacao?: string
+  comprovante_url?: string | null
+  recibo_url?: string | null
+  numero_recibo?: number
   created_at: string
 }
 
