@@ -42,9 +42,10 @@ interface Props {
   nomeColaborador: string
   onClose: () => void
   onPago: (payoutId: string) => void
+  onComprovanteUpload?: (payoutId: string, path: string) => void
 }
 
-export function CadernoVirtualModal({ payoutId, nomeColaborador, onClose, onPago }: Props) {
+export function CadernoVirtualModal({ payoutId, nomeColaborador, onClose, onPago, onComprovanteUpload }: Props) {
   const [data, setData] = useState<CadernoData | null>(null)
   const [loading, setLoading] = useState(true)
   const [marcando, setMarcando] = useState(false)
@@ -145,35 +146,44 @@ export function CadernoVirtualModal({ payoutId, nomeColaborador, onClose, onPago
                       <li className="px-3 py-4 text-center text-xs text-gray-400">
                         Nenhum lançamento encontrado
                       </li>
-                    ) : data.entries.map((e) => (
-                      <li
-                        key={e.id}
-                        className="grid grid-cols-[52px_16px_1fr_44px_24px_44px_28px] gap-x-2 px-3 py-2.5 items-center"
-                      >
-                        <span className="text-[10px] text-gray-500 tabular-nums">
-                          {formatDate(e.data_producao).slice(0, 5)}
-                        </span>
-                        <span className="text-[10px] font-semibold text-gray-400 text-center">
-                          {TURNO_LABEL[e.turno] ?? '—'}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-gray-800 truncate">{e.marca}</p>
-                          <p className="text-[10px] text-gray-400 truncate">{e.tamanho}</p>
-                        </div>
-                        <span className="text-[10px] text-gray-500 truncate">
-                          {e.nome_parceiro ?? '—'}
-                        </span>
-                        <span className="text-[10px] text-gray-500 tabular-nums">{e.cores}</span>
-                        <span className="text-xs font-bold text-gray-800 tabular-nums">
-                          {e.quantidade.toLocaleString('pt-BR')}
-                        </span>
-                        <span className={`text-[9px] font-semibold px-1 py-0.5 rounded-full ${STATUS_PILL[e.status]}`}>
-                          {STATUS_LABEL[e.status]}
-                        </span>
-                      </li>
-                    ))}
+                    ) : data.entries.map((e) => {
+                      const isDivergente = e.status === 'divergente'
+                      return (
+                        <li
+                          key={e.id}
+                          className={`grid grid-cols-[52px_16px_1fr_44px_24px_44px_28px] gap-x-2 px-3 py-2.5 items-center ${isDivergente ? 'opacity-40' : ''}`}
+                        >
+                          <span className="text-[10px] text-gray-500 tabular-nums">
+                            {formatDate(e.data_producao).slice(0, 5)}
+                          </span>
+                          <span className="text-[10px] font-semibold text-gray-400 text-center">
+                            {TURNO_LABEL[e.turno] ?? '—'}
+                          </span>
+                          <div className="min-w-0">
+                            <p className={`text-xs font-semibold text-gray-800 truncate ${isDivergente ? 'line-through' : ''}`}>{e.marca}</p>
+                            <p className="text-[10px] text-gray-400 truncate">{e.tamanho}</p>
+                          </div>
+                          <span className="text-[10px] text-gray-500 truncate">
+                            {e.nome_parceiro ?? '—'}
+                          </span>
+                          <span className="text-[10px] text-gray-500 tabular-nums">{e.cores}</span>
+                          <span className={`text-xs font-bold tabular-nums ${isDivergente ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                            {e.quantidade.toLocaleString('pt-BR')}
+                          </span>
+                          <span className={`text-[9px] font-semibold px-1 py-0.5 rounded-full ${STATUS_PILL[e.status]}`}>
+                            {STATUS_LABEL[e.status]}
+                          </span>
+                        </li>
+                      )
+                    })}
                   </ul>
                 </div>
+                {/* Aviso de divergentes não contabilizados */}
+                {data.entries.some((e) => e.status === 'divergente') && (
+                  <p className="text-[10px] text-red-500 mt-1.5 px-1">
+                    ⚠ {data.entries.filter((e) => e.status === 'divergente').length} lançamento(s) divergente(s) não foram contabilizados no pagamento.
+                  </p>
+                )}
               </div>
 
               {/* Resumo do cálculo */}
@@ -250,7 +260,10 @@ export function CadernoVirtualModal({ payoutId, nomeColaborador, onClose, onPago
                     <UploadComprovante
                       payoutId={payoutId}
                       comprovanteUrl={payout.comprovante_url ?? null}
-                      onUpload={buscarCaderno}
+                      onUpload={(path) => {
+                        buscarCaderno()
+                        onComprovanteUpload?.(payoutId, path)
+                      }}
                     />
                     {payout.comprovante_url && (
                       <a

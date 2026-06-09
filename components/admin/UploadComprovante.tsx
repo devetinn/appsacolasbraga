@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 interface UploadComprovanteProps {
   payoutId: string
   comprovanteUrl: string | null
-  onUpload: () => void
+  onUpload: (path: string) => void
 }
 
 const ACCEPTED = 'image/jpeg,image/png,image/webp,application/pdf'
@@ -56,7 +56,7 @@ export function UploadComprovante({ payoutId, comprovanteUrl, onUpload }: Upload
 
       if (!patchRes.ok) throw new Error('Erro ao salvar comprovante')
 
-      onUpload()
+      onUpload(path)
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Erro no upload')
     } finally {

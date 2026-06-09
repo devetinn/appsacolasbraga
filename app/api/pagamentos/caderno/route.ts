@@ -1,28 +1,22 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user || user.user_metadata?.funcao !== 'admin') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
-    }
+    const authUser = await assertAdmin()
+    if (!authUser) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
     const payoutId = request.nextUrl.searchParams.get('payoutId')
     if (!payoutId) return NextResponse.json({ error: 'payoutId obrigatório' }, { status: 400 })
 
-    const admin = createAdminClient()
+    const db = createAdminClient()
 
-    const [payoutRes, ] = await Promise.all([
-      admin
-        .from('payouts')
-        .select('*, colaborador:users!colaborador_id(nome, funcao, pix_key), quinzena:pay_periods!quinzena_id(data_inicio, data_fim)')
-        .eq('id', payoutId)
-        .single(),
-    ])
+    const payoutRes = await db
+      .from('payouts')
+      .select('*, colaborador:users!colaborador_id(nome, funcao, pix_key), quinzena:pay_periods!quinzena_id(data_inicio, data_fim)')
+      .eq('id', payoutId)
+      .single()
 
     if (payoutRes.error || !payoutRes.data) {
       return NextResponse.json({ error: 'Payout não encontrado' }, { status: 404 })
@@ -30,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     const { colaborador_id, quinzena_id } = payoutRes.data
 
-    const { data: entries } = await admin
+    const { data: entries } = await db
       .from('production_entries')
       .select('*, parceiro:users!parceiro_id(nome)')
       .eq('quinzena_id', quinzena_id)

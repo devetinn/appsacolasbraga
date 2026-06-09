@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertAdmin } from '@/lib/admin-auth'
 
 const MIME_TO_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -11,12 +11,8 @@ const MIME_TO_EXT: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user || user.user_metadata?.funcao !== 'admin') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
-    }
+    const authUser = await assertAdmin()
+    if (!authUser) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
 
     const { payoutId, contentType } = await request.json()
     if (!payoutId || !contentType) {
@@ -24,9 +20,9 @@ export async function POST(request: NextRequest) {
     }
 
     const ext = MIME_TO_EXT[contentType] ?? 'jpg'
-    const admin = createAdminClient()
+    const db = createAdminClient()
 
-    const { data: payout } = await admin
+    const { data: payout } = await db
       .from('payouts')
       .select('quinzena_id')
       .eq('id', payoutId)
@@ -36,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     const path = `comprovantes/${payout.quinzena_id}/${payoutId}.${ext}`
 
-    const { data, error } = await admin.storage
+    const { data, error } = await db.storage
       .from('documentos-pagamentos')
       .createSignedUploadUrl(path)
 

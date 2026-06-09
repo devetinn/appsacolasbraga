@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText } from 'lucide-react'
+import { FileText, Paperclip } from 'lucide-react'
 import Link from 'next/link'
 import type { Payout } from '@/types'
 import { formatarMoeda } from '@/lib/calculos'
@@ -26,6 +26,12 @@ export function TabelaPagamentos({ payouts: initialPayouts }: TabelaPagamentosPr
     )
   }
 
+  function handleComprovanteUpload(payoutId: string, path: string) {
+    setPayouts((prev) =>
+      prev.map((p) => p.id === payoutId ? { ...p, comprovante_url: path } : p)
+    )
+  }
+
   return (
     <>
       {payoutSelecionadoId && payoutSelecionado && (
@@ -34,6 +40,7 @@ export function TabelaPagamentos({ payouts: initialPayouts }: TabelaPagamentosPr
           nomeColaborador={payoutSelecionado.nome_colaborador}
           onClose={() => setPayoutSelecionadoId(null)}
           onPago={handlePago}
+          onComprovanteUpload={handleComprovanteUpload}
         />
       )}
 
@@ -81,14 +88,21 @@ export function TabelaPagamentos({ payouts: initialPayouts }: TabelaPagamentosPr
                 </td>
                 <td className="px-4 py-3 text-right">
                   {payout.status === 'pago' && (
-                    <Link
-                      href={`/admin/recibo/${payout.id}`}
-                      target="_blank"
-                      className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      <FileText size={12} />
-                      Recibo
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      {payout.comprovante_url && (
+                        <span title="Comprovante anexado" className="text-green-500">
+                          <Paperclip size={12} />
+                        </span>
+                      )}
+                      <Link
+                        href={`/admin/recibo/${payout.id}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <FileText size={12} />
+                        Recibo
+                      </Link>
+                    </div>
                   )}
                 </td>
               </tr>
