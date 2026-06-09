@@ -30,9 +30,12 @@ export function BotaoFecharQuinzena() {
     setMostrarModal(false)
     const msg = json.aviso
       ? `Quinzena fechada! ⚠️ ${json.aviso}`
-      : 'Quinzena fechada com sucesso!'
+      : 'Quinzena fechada! Redirecionando para pagamentos...'
     showToast(msg, json.aviso ? 'error' : 'success')
-    router.refresh()
+
+    setTimeout(() => {
+      window.location.href = '/admin/pagamentos'
+    }, 1800)
   }
 
   return (
