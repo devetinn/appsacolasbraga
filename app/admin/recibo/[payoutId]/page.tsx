@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
+import { assertAdmin } from '@/lib/admin-auth'
 import { ReciboLayout } from './ReciboLayout'
 import { PrintButton } from './PrintButton'
 import Link from 'next/link'
@@ -11,12 +11,8 @@ interface Props {
 }
 
 export default async function ReciboPage({ params }: Props) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user || user.user_metadata?.funcao !== 'admin') {
-    notFound()
-  }
+  const authUser = await assertAdmin()
+  if (!authUser) notFound()
 
   const admin = createAdminClient()
 
