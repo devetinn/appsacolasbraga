@@ -27,7 +27,7 @@ const editSchema = z.object({
 
 type CreateData = z.infer<typeof createSchema>
 type EditData = z.infer<typeof editSchema>
-type ColaboradorListado = Pick<User, 'id' | 'nome' | 'funcao' | 'ativo'> & { pix_key?: string | null }
+type ColaboradorListado = Pick<User, 'id' | 'nome' | 'funcao' | 'ativo'> & { pix_key?: string | null; email?: string }
 
 interface ColaboradoresConfigProps {
   colaboradoresIniciais: ColaboradorListado[]
@@ -245,6 +245,7 @@ export function ColaboradoresConfig({ colaboradoresIniciais }: ColaboradoresConf
             <thead>
               <tr className="border-b border-black/[0.05] bg-brand-cream/60">
                 <th className="px-4 py-3 text-left text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-dark/35">Nome</th>
+                <th className="px-4 py-3 text-left text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-dark/35 hidden md:table-cell">E-mail</th>
                 <th className="px-4 py-3 text-left text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-dark/35">Função</th>
                 <th className="px-4 py-3 text-left text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-dark/35 hidden sm:table-cell">Chave PIX</th>
                 <th className="px-4 py-3 text-left text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-dark/35">Status</th>
@@ -255,6 +256,7 @@ export function ColaboradoresConfig({ colaboradoresIniciais }: ColaboradoresConf
               {colaboradores.map((c) => (
                 <tr key={c.id} className="border-b border-black/[0.04] last:border-0 hover:bg-brand-cream/30 transition-colors">
                   <td className="px-4 py-3 font-sans font-semibold text-brand-dark">{c.nome}</td>
+                  <td className="px-4 py-3 font-sans text-brand-dark/40 text-xs hidden md:table-cell">{c.email || '—'}</td>
                   <td className="px-4 py-3 font-sans text-brand-dark/60 capitalize">{c.funcao}</td>
                   <td className="px-4 py-3 font-sans text-brand-dark/40 hidden sm:table-cell">{c.pix_key ?? '—'}</td>
                   <td className="px-4 py-3">
@@ -316,6 +318,14 @@ export function ColaboradoresConfig({ colaboradoresIniciais }: ColaboradoresConf
             </div>
 
             <form onSubmit={handleSubmitEdit(handleEdit)} className="space-y-4">
+              {editando.email && (
+                <div>
+                  <p className={labelClass}>E-mail</p>
+                  <p className="text-sm font-sans text-brand-dark/50 px-4 py-3 rounded-xl bg-black/[0.03] border border-black/[0.06]">
+                    {editando.email}
+                  </p>
+                </div>
+              )}
               <Field label="Nome completo" error={editErrors.nome?.message}>
                 <input {...registerEdit('nome')} className={inputClass} />
               </Field>
