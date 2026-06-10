@@ -17,15 +17,31 @@ export function BotaoNotificacoes() {
   const [modal, setModal] = useState<ModalTipo>(null)
 
   useEffect(() => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    // Verifica permissão imediatamente, sem esperar o service worker
+    if (typeof Notification === 'undefined') {
       setStatus('unsupported')
       return
     }
-    const perm = typeof Notification !== 'undefined' ? Notification.permission : 'default'
+
+    const perm = Notification.permission
+
     if (perm === 'denied') {
       setStatus('denied')
       return
     }
+
+    if (perm === 'default') {
+      // Nunca pediu permissão — mostra modal sem precisar checar SW
+      setStatus('unsubscribed')
+      return
+    }
+
+    // Permissão concedida — verifica se está de fato inscrito
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setStatus('subscribed')
+      return
+    }
+
     navigator.serviceWorker.ready
       .then((reg) => reg.pushManager.getSubscription())
       .then((sub) => setStatus(sub ? 'subscribed' : 'unsubscribed'))
@@ -81,15 +97,12 @@ export function BotaoNotificacoes() {
     setStatus('unsubscribed')
   }
 
-  if (status === 'loading') return null
-
   return (
     <>
-      {/* DEBUG TEMPORÁRIO - remover após diagnóstico */}
+      {/* DEBUG TEMPORÁRIO */}
       <div className="fixed top-14 left-0 right-0 z-[200] px-3 pointer-events-none">
         <div className="max-w-sm mx-auto bg-yellow-300 text-black text-[10px] rounded-xl p-2 leading-relaxed">
-          <p>status: <b>{status}</b></p>
-          <p>modal: <b>{modal ?? 'null'}</b></p>
+          <p>status: <b>{status}</b> | modal: <b>{modal ?? 'null'}</b></p>
           <p>permission: <b>{typeof Notification !== 'undefined' ? Notification.permission : 'N/A'}</b></p>
           <p>SW: <b>{'serviceWorker' in navigator ? 'sim' : 'não'}</b> | Push: <b>{'PushManager' in window ? 'sim' : 'não'}</b></p>
         </div>
