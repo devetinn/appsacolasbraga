@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, BellOff, BellRing } from 'lucide-react'
+import { Bell, BellOff, BellRing, BellMinus, SmartphoneNfc } from 'lucide-react'
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -10,30 +10,35 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from(Array.from(raw).map((c) => c.charCodeAt(0)))
 }
 
+type ModalTipo = 'ativar' | 'bloqueado' | 'instalar' | null
+
 export function BotaoNotificacoes() {
   const [status, setStatus] = useState<'loading' | 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed'>('loading')
-  const [modalVisivel, setModalVisivel] = useState(false)
+  const [modal, setModal] = useState<ModalTipo>(null)
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       setStatus('unsupported')
       return
     }
-    if (Notification.permission === 'denied') {
+    const perm = typeof Notification !== 'undefined' ? Notification.permission : 'default'
+    if (perm === 'denied') {
       setStatus('denied')
       return
     }
-    navigator.serviceWorker.ready.then((reg) =>
-      reg.pushManager.getSubscription().then((sub) => {
-        setStatus(sub ? 'subscribed' : 'unsubscribed')
-      })
-    ).catch(() => setStatus('unsubscribed'))
+    navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => setStatus(sub ? 'subscribed' : 'unsubscribed'))
+      .catch(() => setStatus('unsubscribed'))
   }, [])
 
-  // Abre o modal sempre que o colaborador ainda não ativou
+  // Abre o modal correto assim que o status é conhecido
   useEffect(() => {
-    if (status === 'unsubscribed' && Notification.permission === 'default') {
-      setModalVisivel(true)
+    if (status === 'unsupported') { setModal('instalar'); return }
+    if (status === 'denied')      { setModal('bloqueado'); return }
+    if (status === 'unsubscribed') {
+      const perm = typeof Notification !== 'undefined' ? Notification.permission : 'default'
+      if (perm === 'default') setModal('ativar')
     }
   }, [status])
 
@@ -56,9 +61,9 @@ export function BotaoNotificacoes() {
         }),
       })
       setStatus('subscribed')
-      setModalVisivel(false)
+      setModal(null)
     } catch {
-      setModalVisivel(false)
+      setModal(null)
     }
   }
 
@@ -76,23 +81,20 @@ export function BotaoNotificacoes() {
     setStatus('unsubscribed')
   }
 
-  if (status === 'loading' || status === 'unsupported') return null
-  if (status === 'denied') return null
+  if (status === 'loading') return null
 
   return (
     <>
-      {/* Modal centralizado */}
-      {modalVisivel && (
+      {/* Modal: ativar notificações */}
+      {modal === 'ativar' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-sm bg-white rounded-3xl p-7 shadow-2xl flex flex-col items-center text-center">
             <div className="bg-brand-blue/10 rounded-full p-4 mb-4">
               <BellRing size={32} className="text-brand-blue" />
             </div>
-            <h2 className="font-display font-bold text-brand-dark text-xl mb-2">
-              Ative as notificações
-            </h2>
+            <h2 className="font-display font-bold text-brand-dark text-xl mb-2">Ative as notificações</h2>
             <p className="text-brand-dark/55 text-sm leading-relaxed mb-6">
-              Receba um aviso no celular assim que o seu pagamento for confirmado. Assim você fica sabendo na hora, sem precisar abrir o app.
+              Receba um aviso no celular assim que o seu pagamento for confirmado. Você fica sabendo na hora, sem precisar abrir o app.
             </p>
             <button
               onClick={subscribe}
@@ -100,11 +102,48 @@ export function BotaoNotificacoes() {
             >
               Ativar notificações
             </button>
-            <button
-              onClick={() => setModalVisivel(false)}
-              className="text-brand-dark/40 text-sm py-1"
-            >
+            <button onClick={() => setModal(null)} className="text-brand-dark/40 text-sm py-1">
               Agora não
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: notificações bloqueadas (denied) */}
+      {modal === 'bloqueado' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-7 shadow-2xl flex flex-col items-center text-center">
+            <div className="bg-red-50 rounded-full p-4 mb-4">
+              <BellMinus size={32} className="text-red-400" />
+            </div>
+            <h2 className="font-display font-bold text-brand-dark text-xl mb-2">Notificações bloqueadas</h2>
+            <p className="text-brand-dark/55 text-sm leading-relaxed mb-6">
+              Você bloqueou as notificações anteriormente. Para reativar, acesse:
+              <br /><br />
+              <span className="font-semibold text-brand-dark/70">Ajustes → Sacolas Braga → Notificações → Permitir</span>
+            </p>
+            <button onClick={() => setModal(null)} className="w-full bg-brand-dark/10 text-brand-dark font-semibold py-3.5 rounded-2xl text-sm">
+              Entendi
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: app não instalado (unsupported) */}
+      {modal === 'instalar' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-7 shadow-2xl flex flex-col items-center text-center">
+            <div className="bg-brand-blue/10 rounded-full p-4 mb-4">
+              <SmartphoneNfc size={32} className="text-brand-blue" />
+            </div>
+            <h2 className="font-display font-bold text-brand-dark text-xl mb-2">Instale o app</h2>
+            <p className="text-brand-dark/55 text-sm leading-relaxed mb-6">
+              Para receber notificações de pagamento, adicione o app à tela de início:
+              <br /><br />
+              <span className="font-semibold text-brand-dark/70">Toque em Compartilhar → "Adicionar à Tela de Início" → Abrir pelo ícone</span>
+            </p>
+            <button onClick={() => setModal(null)} className="w-full bg-brand-dark/10 text-brand-dark font-semibold py-3.5 rounded-2xl text-sm">
+              Entendi
             </button>
           </div>
         </div>
@@ -112,7 +151,7 @@ export function BotaoNotificacoes() {
 
       {/* Botão sino no header */}
       <button
-        onClick={status === 'subscribed' ? unsubscribe : () => setModalVisivel(true)}
+        onClick={status === 'subscribed' ? unsubscribe : () => setModal(status === 'unsupported' ? 'instalar' : status === 'denied' ? 'bloqueado' : 'ativar')}
         title={status === 'subscribed' ? 'Desativar notificações' : 'Ativar notificações'}
         className={`p-2 rounded-full transition-colors ${
           status === 'subscribed'
