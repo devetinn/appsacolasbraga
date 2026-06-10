@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { TabelaLancamentos } from '@/components/admin/TabelaLancamentos'
 import { BotaoFecharColaborador } from '@/components/admin/BotaoFecharColaborador'
-import { calcularValorProducao, formatarMoeda } from '@/lib/calculos'
+import { calcularPayouts, formatarMoeda } from '@/lib/calculos'
 import type { ProductionEntry } from '@/types'
 
 export default async function LancamentosPage() {
@@ -37,7 +37,7 @@ export default async function LancamentosPage() {
       .select('*, users!colaborador_id(nome), parceiro:users!parceiro_id(nome)')
       .eq('quinzena_id', quinzena.id)
       .order('created_at', { ascending: false }),
-    supabase.from('users').select('id, nome, funcao').neq('funcao', 'admin'),
+    supabase.from('users').select('id, nome, funcao').in('funcao', ['pintor', 'ajudante']),
     supabase.from('payment_rates').select('funcao, valor_unitario').is('vigencia_fim', null),
     supabase.from('payouts').select('colaborador_id, valor_total').eq('quinzena_id', quinzena.id),
   ])
@@ -65,9 +65,12 @@ export default async function LancamentosPage() {
     })
   }
 
+  // Usa calcularPayouts para estimativa correta por função (suporta multi-função)
+  const payoutsEstimados = calcularPayouts(entriesComNome, rates ?? [])
+  const estimadoMap = new Map(payoutsEstimados.map((p) => [p.colaborador_id, p.valor_total]))
+
   const resumoColaboradores = Array.from(colaboradorMap.entries()).map(([id, info]) => {
-    const rate = rates?.find((r) => r.funcao === info.funcao)
-    const valorEstimado = rate ? calcularValorProducao(info.unidades, rate.valor_unitario) : 0
+    const valorEstimado = estimadoMap.get(id) ?? 0
     return { id, ...info, valorEstimado, jaFechado: jaFechadosMap.has(id), valorPago: jaFechadosMap.get(id) ?? 0 }
   })
 

@@ -18,31 +18,48 @@ export function calcularValorProducao(quantidade: number, valorPorMilheiro: numb
 }
 
 export function calcularPayouts(
-  entries: { colaborador_id: string; quantidade: number; status: string }[],
+  entries: { colaborador_id: string; quantidade: number; status: string; funcao: string }[],
   rates: { funcao: string; valor_unitario: number }[],
-  users: { id: string; funcao: string }[]
 ): PayoutCalculo[] {
   // Inclui pendente + confirmado; apenas divergente é excluído
   const confirmados = entries.filter((e) => e.status !== 'divergente')
 
-  const totais = new Map<string, number>()
+  // Agrupa por (colaborador_id, funcao) para aplicar taxa correta por função
+  const grupos = new Map<string, Map<string, number>>()
   confirmados.forEach((e) => {
-    totais.set(e.colaborador_id, (totais.get(e.colaborador_id) ?? 0) + e.quantidade)
+    if (!grupos.has(e.colaborador_id)) grupos.set(e.colaborador_id, new Map())
+    const byFuncao = grupos.get(e.colaborador_id)!
+    byFuncao.set(e.funcao, (byFuncao.get(e.funcao) ?? 0) + e.quantidade)
   })
 
   const payouts: PayoutCalculo[] = []
-  totais.forEach((total_unidades, colaborador_id) => {
-    const user = users.find((u) => u.id === colaborador_id)
-    if (!user) return
+  grupos.forEach((byFuncao, colaborador_id) => {
+    let total_unidades = 0
+    let valor_total = 0
+    let funcaoUnica: string | null = null
+    let misto = false
 
-    const rate = rates.find((r) => r.funcao === user.funcao)
-    if (!rate) return
+    byFuncao.forEach((quantidade, funcao) => {
+      const rate = rates.find((r) => r.funcao === funcao)
+      if (!rate) return
+      total_unidades += quantidade
+      valor_total += calcularValorProducao(quantidade, rate.valor_unitario)
+      if (funcaoUnica === null) funcaoUnica = funcao
+      else if (funcaoUnica !== funcao) misto = true
+    })
+
+    if (total_unidades === 0) return
+
+    // valor_unitario = 0 indica função mista (exibido como "Variável" na UI)
+    const valor_unitario = misto
+      ? 0
+      : (rates.find((r) => r.funcao === funcaoUnica)?.valor_unitario ?? 0)
 
     payouts.push({
       colaborador_id,
       total_unidades,
-      valor_unitario: rate.valor_unitario,
-      valor_total: calcularValorProducao(total_unidades, rate.valor_unitario),
+      valor_unitario,
+      valor_total,
     })
   })
 

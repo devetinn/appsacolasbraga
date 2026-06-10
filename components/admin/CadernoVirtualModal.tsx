@@ -201,7 +201,7 @@ export function CadernoVirtualModal({ payoutId, nomeColaborador, onClose, onPago
                   <div className="flex justify-between">
                     <span>Valor por milheiro</span>
                     <span className="font-semibold tabular-nums">
-                      {formatarMoeda(payout!.valor_unitario)}
+                      {payout!.valor_unitario > 0 ? formatarMoeda(payout!.valor_unitario) : 'Variável'}
                     </span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-black/[0.06]">

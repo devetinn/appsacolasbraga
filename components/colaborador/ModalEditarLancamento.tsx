@@ -17,6 +17,7 @@ const inputClass =
 export function ModalEditarLancamento({ entry, onClose, onSaved, onDeleted }: ModalEditarLancamentoProps) {
   const [form, setForm] = useState({
     data_producao: entry.data_producao,
+    funcao: (entry.funcao ?? 'pintor') as 'pintor' | 'ajudante',
     marca: entry.marca,
     tamanho: entry.tamanho,
     cores: entry.cores,
@@ -107,6 +108,28 @@ export function ModalEditarLancamento({ entry, onClose, onSaved, onDeleted }: Mo
               onChange={(e) => set('data_producao', e.target.value)}
               className={inputClass}
             />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-sans font-semibold uppercase tracking-widest text-brand-dark/40 mb-1">
+              Função
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {(['pintor', 'ajudante'] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => set('funcao', f)}
+                  className={`py-2.5 rounded-xl border text-sm font-sans font-semibold capitalize transition-all ${
+                    form.funcao === f
+                      ? 'bg-brand-blue border-brand-blue text-white'
+                      : 'bg-brand-cream border-black/[0.08] text-brand-dark/60'
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

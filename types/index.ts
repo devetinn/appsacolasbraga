@@ -43,6 +43,7 @@ export interface ProductionEntry {
   parceiro_id: string
   data_producao: string
   turno: Turno
+  funcao: string
   marca: string
   tamanho: string
   cores: number

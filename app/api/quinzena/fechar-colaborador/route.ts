@@ -45,14 +45,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Este colaborador já foi fechado nesta quinzena.' }, { status: 409 })
     }
 
-    // Busca entradas, usuário e taxa
-    const [{ data: entries }, { data: userRow }, { data: rates }] = await Promise.all([
+    // Busca entradas e taxas
+    const [{ data: entries }, { data: rates }] = await Promise.all([
       supabase
         .from('production_entries')
-        .select('colaborador_id, quantidade, status')
+        .select('colaborador_id, quantidade, status, funcao')
         .eq('quinzena_id', quinzena_id)
         .eq('colaborador_id', colaborador_id),
-      supabase.from('users').select('id, funcao').eq('id', colaborador_id).single(),
       supabase.from('payment_rates').select('funcao, valor_unitario').is('vigencia_fim', null),
     ])
 
@@ -68,7 +67,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const payouts = calcularPayouts(entries, rates ?? [], userRow ? [userRow] : [])
+    const payouts = calcularPayouts(entries, rates ?? [])
 
     if (payouts.length === 0) {
       return NextResponse.json({ error: 'Nenhum lançamento válido para calcular.' }, { status: 400 })

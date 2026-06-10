@@ -130,6 +130,7 @@ export function TabelaLancamentos({
               {mostrarColaborador && <th className="px-4 py-3">Colaborador</th>}
               {mostrarColaborador && <th className="px-4 py-3">Parceiro</th>}
               <th className="px-4 py-3">Data</th>
+              <th className="px-4 py-3">Função</th>
               <th className="px-4 py-3">Marca</th>
               <th className="px-4 py-3">Tamanho</th>
               <th className="px-4 py-3 text-right">Qtd</th>
@@ -150,6 +151,7 @@ export function TabelaLancamentos({
                     <td className="px-4 py-3 text-gray-500">{entry.nome_parceiro ?? '—'}</td>
                   )}
                   <td className="px-4 py-3">{formatDate(entry.data_producao)}</td>
+                  <td className="px-4 py-3 capitalize text-gray-500">{entry.funcao ?? '—'}</td>
                   <td className="px-4 py-3">{entry.marca}</td>
                   <td className="px-4 py-3">{entry.tamanho}</td>
                   <td className="px-4 py-3 text-right font-medium">{entry.quantidade.toLocaleString('pt-BR')}</td>

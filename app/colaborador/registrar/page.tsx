@@ -14,6 +14,7 @@ export default function RegistrarProducao() {
   const { quinzena } = useQuinzenaAtiva()
   const metricas = useMetricasQuinzena(quinzena?.id)
   const [parceiros, setParceiros] = useState<Pick<User, 'id' | 'nome'>[]>([])
+  const [defaultFuncao, setDefaultFuncao] = useState<'pintor' | 'ajudante'>('pintor')
   const { toast, showToast, hideToast } = useToast()
 
   useEffect(() => {
@@ -28,18 +29,17 @@ export default function RegistrarProducao() {
         .eq('id', user.id)
         .single()
 
-      if (!profile?.funcao) return
+      if (profile?.funcao === 'pintor' || profile?.funcao === 'ajudante') {
+        setDefaultFuncao(profile.funcao)
+      }
 
-      // Pintor trabalha com ajudante e vice-versa
-      const funcaoComplementar: string =
-        profile.funcao === 'pintor' ? 'ajudante' : 'pintor'
-
+      // Lista todos os colaboradores ativos (exceto o próprio)
       const { data } = await supabase
         .from('users')
         .select('id, nome')
         .eq('ativo', true)
-        .eq('funcao', funcaoComplementar)
         .neq('id', user.id)
+        .in('funcao', ['pintor', 'ajudante'])
         .order('nome')
 
       setParceiros(data ?? [])
@@ -49,6 +49,7 @@ export default function RegistrarProducao() {
   async function handleSubmit(data: {
     data_producao: string
     turno: 'unico' | 'manha' | 'tarde'
+    funcao: 'pintor' | 'ajudante'
     marca: string
     tamanho: string
     cores: number
@@ -79,7 +80,7 @@ export default function RegistrarProducao() {
       <BannerMetricas {...metricas} />
 
       {quinzena ? (
-        <FormRegistro parceiros={parceiros} onSubmit={handleSubmit} />
+        <FormRegistro parceiros={parceiros} defaultFuncao={defaultFuncao} onSubmit={handleSubmit} />
       ) : (
         <div className="rounded-3xl border border-dashed border-brand-dark/15 bg-brand-dark/[0.02] py-12 text-center">
           <p className="text-sm font-sans font-medium text-brand-dark/40">

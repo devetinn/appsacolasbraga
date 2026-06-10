@@ -7,6 +7,7 @@ const entrySchema = z.object({
   quinzena_id: z.string().uuid(),
   parceiro_id: z.string().uuid(),
   data_producao: z.string(),
+  funcao: z.enum(['pintor', 'ajudante']),
   marca: z.string().min(1),
   tamanho: z.string().min(1),
   cores: z.number().int().min(1),

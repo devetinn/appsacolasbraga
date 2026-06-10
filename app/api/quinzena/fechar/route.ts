@@ -34,12 +34,11 @@ export async function POST() {
       return NextResponse.json({ error: 'Nenhuma quinzena aberta' }, { status: 400 })
     }
 
-    const [{ data: entries }, { data: users }, { data: rates }, { data: payoutsExistentes }] = await Promise.all([
+    const [{ data: entries }, { data: rates }, { data: payoutsExistentes }] = await Promise.all([
       supabase
         .from('production_entries')
-        .select('colaborador_id, quantidade, status')
+        .select('colaborador_id, quantidade, status, funcao')
         .eq('quinzena_id', quinzena.id),
-      supabase.from('users').select('id, funcao'),
       supabase.from('payment_rates').select('funcao, valor_unitario').is('vigencia_fim', null),
       supabase.from('payouts').select('colaborador_id').eq('quinzena_id', quinzena.id),
     ])
@@ -52,7 +51,7 @@ export async function POST() {
     // (divergente é excluído do cálculo, não bloqueia mais o fechamento geral)
     const divergencias = entriesPendentes.filter((e) => e.status === 'divergente').length
 
-    const payouts = calcularPayouts(entriesPendentes, rates ?? [], users ?? [])
+    const payouts = calcularPayouts(entriesPendentes, rates ?? [])
 
     if (payouts.length === 0 && jaFechados.size === 0) {
       return NextResponse.json({ error: 'Nenhum lançamento válido para calcular.' }, { status: 400 })

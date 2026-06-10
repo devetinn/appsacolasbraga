@@ -10,9 +10,15 @@ const TURNOS = [
   { value: 'tarde',  label: 'Tarde',  desc: 'Turno da tarde' },
 ] as const
 
+const FUNCOES = [
+  { value: 'pintor',   label: 'Pintor',   desc: 'Costura/pintura' },
+  { value: 'ajudante', label: 'Ajudante', desc: 'Auxiliar' },
+] as const
+
 const schema = z.object({
   data_producao: z.string().min(1, 'Data é obrigatória'),
   turno: z.enum(['unico', 'manha', 'tarde']),
+  funcao: z.enum(['pintor', 'ajudante']),
   marca: z.string().min(1, 'Marca é obrigatória'),
   tamanho: z.string().min(1, 'Tamanho é obrigatório'),
   cores: z.coerce.number().int().min(1, 'Mínimo 1 cor'),
@@ -24,6 +30,7 @@ type FormData = z.infer<typeof schema>
 
 interface FormRegistroProps {
   parceiros: { id: string; nome: string }[]
+  defaultFuncao?: 'pintor' | 'ajudante'
   onSubmit: (data: FormData) => Promise<void>
 }
 
@@ -41,20 +48,21 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 
 const inputClass = 'w-full min-w-0 appearance-none rounded-xl border border-black/[0.08] bg-brand-cream px-4 py-3 text-sm font-sans text-brand-dark placeholder-brand-dark/25 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50 transition-all'
 
-export function FormRegistro({ parceiros, onSubmit }: FormRegistroProps) {
+export function FormRegistro({ parceiros, defaultFuncao = 'pintor', onSubmit }: FormRegistroProps) {
   const today = new Date().toISOString().split('T')[0]
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting }, reset } =
     useForm<FormData>({
       resolver: zodResolver(schema),
-      defaultValues: { data_producao: today, turno: 'unico', cores: 1 },
+      defaultValues: { data_producao: today, turno: 'unico', funcao: defaultFuncao, cores: 1 },
     })
 
   const turnoAtual = watch('turno')
+  const funcaoAtual = watch('funcao')
 
   async function handleFormSubmit(data: FormData) {
     await onSubmit(data)
-    reset({ data_producao: today, turno: 'unico', cores: 1 })
+    reset({ data_producao: today, turno: 'unico', funcao: defaultFuncao, cores: 1 })
   }
 
   return (
@@ -91,6 +99,35 @@ export function FormRegistro({ parceiros, onSubmit }: FormRegistroProps) {
           })}
         </div>
         <input type="hidden" {...register('turno')} />
+      </Field>
+
+      {/* Seletor de função — botões segmentados */}
+      <Field label="Função neste turno" error={errors.funcao?.message}>
+        <div className="grid grid-cols-2 gap-2">
+          {FUNCOES.map(({ value, label, desc }) => {
+            const ativo = funcaoAtual === value
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setValue('funcao', value, { shouldValidate: true })}
+                className={`flex flex-col items-center py-3 px-2 rounded-xl border transition-all ${
+                  ativo
+                    ? 'bg-brand-blue border-brand-blue text-white'
+                    : 'bg-brand-cream border-black/[0.08] text-brand-dark/60 hover:border-brand-dark/20'
+                }`}
+              >
+                <span className={`text-sm font-sans font-bold leading-none ${ativo ? 'text-white' : 'text-brand-dark'}`}>
+                  {label}
+                </span>
+                <span className={`text-[9px] font-sans mt-1 text-center leading-tight ${ativo ? 'text-white/70' : 'text-brand-dark/35'}`}>
+                  {desc}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        <input type="hidden" {...register('funcao')} />
       </Field>
 
       <Field label="Marca" error={errors.marca?.message}>

@@ -16,6 +16,7 @@ const patchColaboradorSchema = z.object({
   tamanho: z.string().min(1),
   cores: z.number().int().min(1),
   data_producao: z.string().min(1),
+  funcao: z.enum(['pintor', 'ajudante']),
 })
 
 export async function DELETE(
