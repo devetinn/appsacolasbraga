@@ -43,7 +43,7 @@ export function GraficoRelatorios({ dadosPorQuinzena, topColaboradores }: Props)
               <XAxis dataKey="periodo" tick={{ fontSize: 10, fill: '#9ca3af' }} />
               <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} />
               <Tooltip
-                formatter={(v: number) => v.toLocaleString('pt-BR')}
+                formatter={(v) => (typeof v === 'number' ? v.toLocaleString('pt-BR') : v)}
                 contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', fontSize: 12 }}
               />
               <Bar dataKey="unidades" fill="#1C22FF" radius={[6, 6, 0, 0]} name="Unidades" />
@@ -66,7 +66,7 @@ export function GraficoRelatorios({ dadosPorQuinzena, topColaboradores }: Props)
                 <XAxis type="number" tick={{ fontSize: 10, fill: '#9ca3af' }} />
                 <YAxis type="category" dataKey="nome" tick={{ fontSize: 11, fill: '#374151' }} width={70} />
                 <Tooltip
-                  formatter={(v: number) => v.toLocaleString('pt-BR')}
+                  formatter={(v) => (typeof v === 'number' ? v.toLocaleString('pt-BR') : v)}
                   contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', fontSize: 12 }}
                 />
                 <Bar dataKey="unidades" fill="#6366f1" radius={[0, 6, 6, 0]} name="Unidades" />
@@ -99,7 +99,7 @@ export function GraficoRelatorios({ dadosPorQuinzena, topColaboradores }: Props)
                 </Pie>
                 <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ fontSize: 11, color: '#6b7280' }}>{v}</span>} />
                 <Tooltip
-                  formatter={(v: number) => v.toLocaleString('pt-BR')}
+                  formatter={(v) => (typeof v === 'number' ? v.toLocaleString('pt-BR') : v)}
                   contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', fontSize: 12 }}
                 />
               </PieChart>
