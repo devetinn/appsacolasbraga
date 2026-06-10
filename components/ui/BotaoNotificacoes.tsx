@@ -75,11 +75,14 @@ export function BotaoNotificacoes() {
         return
       }
 
-      // Aguarda SW ficar pronto com timeout de 5s
+      // Garante que o SW está registrado e ativo
+      if (!navigator.serviceWorker.controller) {
+        await navigator.serviceWorker.register('/sw.js')
+      }
       const reg = await Promise.race([
         navigator.serviceWorker.ready,
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('sw-timeout')), 5000)
+          setTimeout(() => reject(new Error('sw-timeout')), 10000)
         ),
       ])
 

@@ -1,16 +1,17 @@
-const CACHE_NAME = 'sacolas-braga-v1'
-const OFFLINE_URL = '/offline'
+const CACHE_NAME = 'sacolas-braga-v2'
+const OFFLINE_URL = '/offline.html'
 
 const APP_SHELL = [
-  '/',
-  '/offline',
+  '/offline.html',
   '/manifest.json',
 ]
 
-// Instala: cacheia o shell
+// Instala: cacheia o shell (falhas individuais não abortam o install)
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(APP_SHELL.map((url) => cache.add(url)))
+    )
   )
   self.skipWaiting()
 })
