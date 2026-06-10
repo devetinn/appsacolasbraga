@@ -85,6 +85,16 @@ export function BotaoNotificacoes() {
 
   return (
     <>
+      {/* DEBUG TEMPORÁRIO - remover após diagnóstico */}
+      <div className="fixed top-14 left-0 right-0 z-[200] px-3 pointer-events-none">
+        <div className="max-w-sm mx-auto bg-yellow-300 text-black text-[10px] rounded-xl p-2 leading-relaxed">
+          <p>status: <b>{status}</b></p>
+          <p>modal: <b>{modal ?? 'null'}</b></p>
+          <p>permission: <b>{typeof Notification !== 'undefined' ? Notification.permission : 'N/A'}</b></p>
+          <p>SW: <b>{'serviceWorker' in navigator ? 'sim' : 'não'}</b> | Push: <b>{'PushManager' in window ? 'sim' : 'não'}</b></p>
+        </div>
+      </div>
+
       {/* Modal: ativar notificações */}
       {modal === 'ativar' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/50 backdrop-blur-sm">
