@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Pencil } from 'lucide-react'
 import type { EntryComParceiro } from '@/hooks/useProducaoColaborador'
 import { formatDate } from '@/lib/format'
@@ -34,6 +34,11 @@ const STATUS_LABEL: Record<string, string> = {
 export function TabelaProducoes({ entries: initialEntries, loading, totalUnidades, valorEstimado }: TabelaProducoesProps) {
   const [entries, setEntries] = useState(initialEntries)
   const [editando, setEditando] = useState<EntryComParceiro | null>(null)
+
+  // Sincroniza quando o hook termina de carregar os dados do servidor
+  useEffect(() => {
+    setEntries(initialEntries)
+  }, [initialEntries])
 
   function handleSaved(updated: EntryComParceiro) {
     setEntries((prev) => prev.map((e) => e.id === updated.id ? updated : e))
