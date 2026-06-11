@@ -6,7 +6,14 @@
       "PowerShell(cmd /c \"dir /a /s /b \"\"C:\\\\Users\\\\john2\"\" 2>nul | findstr /i \"\"aios-core\"\" | head\")",
       "PowerShell(gh auth *)",
       "PowerShell(supabase *)",
-      "PowerShell(cmd /c \"\"\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\"\" auth status 2>&1\")"
+      "PowerShell(cmd /c \"\"\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\"\" auth status 2>&1\")",
+      "Bash(npm run *)",
+      "Bash(vercel *)",
+      "Bash(git commit -m ' *)",
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "mcp__plugin_supabase_supabase__apply_migration",
+      "mcp__plugin_supabase_supabase__get_advisors",
+      "Bash(node -e ' *)"
     ]
   }
 }
