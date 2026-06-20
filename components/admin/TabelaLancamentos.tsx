@@ -36,6 +36,8 @@ export function TabelaLancamentos({
   const [confirmandoDelete, setConfirmandoDelete] = useState<string | null>(null)
   const [deletando, setDeletando] = useState<string | null>(null)
   const [filtroColaborador, setFiltroColaborador] = useState('')
+  const [filtroFuncao, setFiltroFuncao] = useState('')
+  const [filtroStatus, setFiltroStatus] = useState('')
   const { toast, showToast, hideToast } = useToast()
 
   const handleRealtimeUpdate = useCallback((updated: ProductionEntry) => {
@@ -60,10 +62,39 @@ export function TabelaLancamentos({
     return Array.from(new Set(nomes)).sort()
   }, [entries, mostrarColaborador])
 
+  const funcoes = useMemo(() => {
+    const valores = entries
+      .map((e) => e.funcao ?? '')
+      .filter(Boolean)
+    return Array.from(new Set(valores)).sort()
+  }, [entries])
+
   const entriesFiltrados = useMemo(() => {
-    if (!filtroColaborador) return entries
-    return entries.filter((e) => e.nome_colaborador === filtroColaborador)
-  }, [entries, filtroColaborador])
+    return entries.filter((e) => {
+      if (filtroColaborador && e.nome_colaborador !== filtroColaborador) return false
+      if (filtroFuncao && e.funcao !== filtroFuncao) return false
+      if (filtroStatus && e.status !== filtroStatus) return false
+      return true
+    })
+  }, [entries, filtroColaborador, filtroFuncao, filtroStatus])
+
+  // Resumo do conjunto filtrado para conferência visual
+  const resumoFiltrado = useMemo(() => {
+    const totalLancamentos = entriesFiltrados.length
+    const totalUnidades = entriesFiltrados.reduce(
+      (acc, e) => acc + (e.status !== 'divergente' ? e.quantidade * e.cores : 0),
+      0
+    )
+    return { totalLancamentos, totalUnidades }
+  }, [entriesFiltrados])
+
+  const temFiltroAtivo = Boolean(filtroColaborador || filtroFuncao || filtroStatus)
+
+  const limparFiltros = useCallback(() => {
+    setFiltroColaborador('')
+    setFiltroFuncao('')
+    setFiltroStatus('')
+  }, [])
 
   async function deleteEntry(id: string) {
     setDeletando(id)
@@ -111,19 +142,68 @@ export function TabelaLancamentos({
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
 
-      {mostrarColaborador && colaboradores.length > 0 && (
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Filtrar colaborador:</label>
-          <select
-            value={filtroColaborador}
-            onChange={(e) => setFiltroColaborador(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Todos</option>
-            {colaboradores.map((nome) => (
-              <option key={nome} value={nome}>{nome}</option>
-            ))}
-          </select>
+      {(funcoes.length > 0 || (mostrarColaborador && colaboradores.length > 0)) && (
+        <div className="flex flex-wrap items-end gap-3">
+          {mostrarColaborador && colaboradores.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500">Colaborador</label>
+              <select
+                value={filtroColaborador}
+                onChange={(e) => setFiltroColaborador(e.target.value)}
+                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Todos</option>
+                {colaboradores.map((nome) => (
+                  <option key={nome} value={nome}>{nome}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {funcoes.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500">Função</label>
+              <select
+                value={filtroFuncao}
+                onChange={(e) => setFiltroFuncao(e.target.value)}
+                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white capitalize focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Todas</option>
+                {funcoes.map((funcao) => (
+                  <option key={funcao} value={funcao} className="capitalize">{funcao}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-gray-500">Status</label>
+            <select
+              value={filtroStatus}
+              onChange={(e) => setFiltroStatus(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="divergente">Divergente</option>
+            </select>
+          </div>
+
+          {temFiltroAtivo && (
+            <button
+              onClick={limparFiltros}
+              className="text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
+            >
+              Limpar filtros
+            </button>
+          )}
+
+          <div className="ml-auto text-xs text-gray-500 sm:text-right">
+            <span className="font-medium text-gray-700">{resumoFiltrado.totalLancamentos}</span> lançamento(s)
+            {' · '}
+            <span className="font-medium text-gray-700">{resumoFiltrado.totalUnidades.toLocaleString('pt-BR')}</span> unidades
+          </div>
         </div>
       )}
 
@@ -229,8 +309,8 @@ export function TabelaLancamentos({
             {entriesFiltrados.length === 0 && (
               <tr>
                 <td colSpan={colSpan} className="px-4 py-8 text-center text-gray-400">
-                  {filtroColaborador
-                    ? `Nenhum lançamento para ${filtroColaborador}`
+                  {temFiltroAtivo
+                    ? 'Nenhum lançamento para os filtros selecionados'
                     : 'Nenhum lançamento encontrado'}
                 </td>
               </tr>
