@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { calcularValorProducao } from '@/lib/calculos'
+import { calcularPayouts } from '@/lib/calculos'
 
 export interface MetricasQuinzena {
   totalUnidades: number
@@ -24,17 +24,16 @@ export function useMetricasQuinzena(quinzenaId: string | undefined): MetricasQui
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setLoading(false); return }
 
-    const [{ data: entries }, { data: profile }, { data: quinzena }] = await Promise.all([
+    const [{ data: entries }, { data: rates }, { data: quinzena }] = await Promise.all([
       supabase
         .from('production_entries')
-        .select('quantidade, cores')
+        .select('quantidade, cores, status, funcao')
         .eq('quinzena_id', quinzenaId)
         .eq('colaborador_id', user.id),
       supabase
-        .from('users')
-        .select('funcao')
-        .eq('id', user.id)
-        .single(),
+        .from('payment_rates')
+        .select('funcao, valor_unitario')
+        .is('vigencia_fim', null),
       supabase
         .from('pay_periods')
         .select('data_pagamento')
@@ -42,23 +41,13 @@ export function useMetricasQuinzena(quinzenaId: string | undefined): MetricasQui
         .single(),
     ])
 
-    // Cada cor exige uma passada de impressão separada: unidade efetiva = quantidade × cores
-    const total = (entries ?? []).reduce((s, e) => s + e.quantidade * e.cores, 0)
-    setTotalUnidades(total)
-
-    if (profile?.funcao) {
-      const { data: rate } = await supabase
-        .from('payment_rates')
-        .select('valor_unitario')
-        .eq('funcao', profile.funcao)
-        .is('vigencia_fim', null)
-        .order('vigencia_inicio', { ascending: false })
-        .limit(1)
-        .single()
-
-      const valorUnit = rate?.valor_unitario ?? 0
-      setValorEstimado(calcularValorProducao(total, valorUnit))
-    }
+    // Usa a mesma lógica do admin (calcularPayouts): agrupa por função do
+    // lançamento e aplica a taxa correta de cada função (pintor/ajudante),
+    // excluindo divergentes. Garante paridade com o painel ADMIN.
+    const entriesComId = (entries ?? []).map((e) => ({ ...e, colaborador_id: user.id }))
+    const [meuPayout] = calcularPayouts(entriesComId, rates ?? [])
+    setTotalUnidades(meuPayout?.total_unidades ?? 0)
+    setValorEstimado(meuPayout?.valor_total ?? 0)
 
     if (quinzena?.data_pagamento) {
       const diff = new Date(quinzena.data_pagamento).getTime() - Date.now()
