@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { TabelaLancamentos } from '@/components/admin/TabelaLancamentos'
 import { BotaoFecharColaborador } from '@/components/admin/BotaoFecharColaborador'
+import { BotaoAuditar } from '@/components/admin/BotaoAuditar'
 import { calcularPayouts, formatarMoeda } from '@/lib/calculos'
 import type { ProductionEntry } from '@/types'
 
@@ -77,7 +78,10 @@ export default async function LancamentosPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-800">Lançamentos da Quinzena</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold text-gray-800">Lançamentos da Quinzena</h2>
+        <BotaoAuditar quinzenaId={quinzena.id} />
+      </div>
 
       {/* Resumo por colaborador */}
       {resumoColaboradores.length > 0 && (

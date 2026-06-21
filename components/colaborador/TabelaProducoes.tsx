@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { Pencil } from 'lucide-react'
 import type { EntryComParceiro } from '@/hooks/useProducaoColaborador'
 import { formatDate } from '@/lib/format'
@@ -86,13 +86,15 @@ export function TabelaProducoes({ entries, loading, totalUnidades, valorEstimado
         <ul className="divide-y divide-black/[0.04]">
           {entries.map((e) => {
             const isPendente = e.status === 'pendente'
+            // Divergente também é editável: o colaborador pode corrigir a função.
+            const isEditavel = isPendente || e.status === 'divergente'
             return (
+              <Fragment key={e.id}>
               <li
-                key={e.id}
                 className={`grid grid-cols-[56px_20px_1fr_48px_24px_44px_44px] gap-x-2 px-3 py-2.5 items-center ${
-                  isPendente ? 'cursor-pointer hover:bg-brand-blue/[0.03] active:bg-brand-blue/[0.06]' : ''
+                  isEditavel ? 'cursor-pointer hover:bg-brand-blue/[0.03] active:bg-brand-blue/[0.06]' : ''
                 }`}
-                onClick={isPendente ? () => setEditando(e) : undefined}
+                onClick={isEditavel ? () => setEditando(e) : undefined}
               >
                 <span className="text-[10px] font-sans text-brand-dark/50 tabular-nums">
                   {formatDate(e.data_producao).slice(0, 5)}
@@ -115,11 +117,17 @@ export function TabelaProducoes({ entries, loading, totalUnidades, valorEstimado
                   <span className={`text-[9px] font-sans font-semibold px-1.5 py-0.5 rounded-full ${STATUS_PILL[e.status]}`}>
                     {STATUS_LABEL[e.status]}
                   </span>
-                  {isPendente && (
+                  {isEditavel && (
                     <Pencil size={10} className="text-brand-blue/50 flex-shrink-0" />
                   )}
                 </div>
               </li>
+              {e.status === 'divergente' && e.observacao && (
+                <li className="px-3 pb-2 -mt-1">
+                  <p className="text-[10px] leading-snug text-red-600">{e.observacao}</p>
+                </li>
+              )}
+              </Fragment>
             )
           })}
         </ul>

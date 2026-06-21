@@ -42,3 +42,24 @@ export async function enviarPushParaUsuario(
     // Push falhou — não bloqueia a operação
   }
 }
+
+/**
+ * Notifica todos os administradores ativos. Usa o admin client para listar os
+ * admins (independente de RLS). Não bloqueia a operação principal em caso de erro.
+ */
+export async function notificarAdmins(titulo: string, corpo: string, url = '/admin/lancamentos') {
+  try {
+    const db = createAdminClient()
+    const { data: admins } = await db
+      .from('users')
+      .select('id')
+      .eq('funcao', 'admin')
+      .eq('ativo', true)
+
+    if (!admins || admins.length === 0) return
+
+    await Promise.all(admins.map((a) => enviarPushParaUsuario(a.id, titulo, corpo, url)))
+  } catch {
+    // Falha ao notificar admins não bloqueia a operação
+  }
+}

@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { enviarPushParaUsuario } from '@/lib/push'
+import { conferirEAtualizarPar } from '@/lib/conferir-par'
 import { z } from 'zod'
 
 const entrySchema = z.object({
@@ -61,61 +61,11 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error
 
-    // Conferência automática: busca registro espelho do parceiro
-    const { data: espelho } = await supabase
-      .from('production_entries')
-      .select('id, quantidade')
-      .eq('quinzena_id', novaEntrada.quinzena_id)
-      .eq('colaborador_id', novaEntrada.parceiro_id)
-      .eq('parceiro_id', novaEntrada.colaborador_id)
-      .eq('data_producao', novaEntrada.data_producao)
-      .eq('marca', novaEntrada.marca)
-      .eq('tamanho', novaEntrada.tamanho)
-      .eq('status', 'pendente')
-      .maybeSingle()
-
-    if (espelho) {
-      const novoStatus = espelho.quantidade === novaEntrada.quantidade ? 'confirmado' : 'divergente'
-      await supabase
-        .from('production_entries')
-        .update({ status: novoStatus })
-        .in('id', [novaEntrada.id, espelho.id])
-
-      if (novoStatus === 'confirmado') {
-        // Notifica os dois colaboradores
-        await Promise.all([
-          enviarPushParaUsuario(
-            user.id,
-            '✅ Registro confirmado!',
-            `Seu lançamento de ${novaEntrada.quantidade} unidades foi confirmado automaticamente.`,
-            '/colaborador/producoes'
-          ),
-          enviarPushParaUsuario(
-            novaEntrada.parceiro_id,
-            '✅ Registro confirmado!',
-            `Seu lançamento de ${espelho.quantidade} unidades foi confirmado automaticamente.`,
-            '/colaborador/producoes'
-          ),
-        ])
-      } else {
-        // Notifica os dois sobre a divergência
-        await Promise.all([
-          enviarPushParaUsuario(
-            user.id,
-            '⚠️ Divergência encontrada',
-            'As quantidades registradas com seu parceiro não coincidem. O admin irá verificar.',
-            '/colaborador/producoes'
-          ),
-          enviarPushParaUsuario(
-            novaEntrada.parceiro_id,
-            '⚠️ Divergência encontrada',
-            'As quantidades registradas com seu parceiro não coincidem. O admin irá verificar.',
-            '/colaborador/producoes'
-          ),
-        ])
-      }
-
-      return NextResponse.json({ ...novaEntrada, status: novoStatus }, { status: 201 })
+    // Conferência automática: casa com o lançamento espelho do parceiro e
+    // audita quantidade + função (trava como divergente e notifica se houver erro).
+    const { matched, novoStatus, observacao } = await conferirEAtualizarPar(supabase, novaEntrada.id)
+    if (matched) {
+      return NextResponse.json({ ...novaEntrada, status: novoStatus, observacao }, { status: 201 })
     }
 
     return NextResponse.json(novaEntrada, { status: 201 })

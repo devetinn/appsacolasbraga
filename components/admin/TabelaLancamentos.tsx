@@ -243,6 +243,11 @@ export function TabelaLancamentos({
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.className}`}>
                       {status.label}
                     </span>
+                    {entry.status === 'divergente' && entry.observacao && (
+                      <p className="mt-1 max-w-[220px] text-[11px] leading-snug text-red-600">
+                        {entry.observacao}
+                      </p>
+                    )}
                   </td>
                   {!readOnly && (
                     <td className="px-4 py-3">

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { assertAdmin } from '@/lib/admin-auth'
 import { logAudit } from '@/lib/audit'
 import { enviarPushParaUsuario } from '@/lib/push'
+import { conferirEAtualizarPar } from '@/lib/conferir-par'
 import { z } from 'zod'
 
 const patchAdminSchema = z.object({
@@ -138,24 +139,44 @@ export async function PATCH(
       return NextResponse.json(data)
     }
 
-    // Colaborador: editar conteúdo do próprio lançamento pendente
+    // Colaborador: editar o próprio lançamento.
+    // - 'pendente': edição completa.
+    // - 'divergente': auto-correção da função e/ou da quantidade (os demais
+    //   campos que identificam o trabalho ficam travados).
     const { data: entry, error: fetchError } = await supabase
       .from('production_entries')
-      .select('colaborador_id, status, quinzena_id, parceiro_id')
+      .select('colaborador_id, status, quinzena_id, parceiro_id, data_producao, marca, tamanho, cores, quantidade')
       .eq('id', params.id)
       .single()
 
     if (fetchError || !entry) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
     if (entry.colaborador_id !== user.id) return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
-    if (entry.status !== 'pendente') {
+    if (entry.status !== 'pendente' && entry.status !== 'divergente') {
       return NextResponse.json(
-        { error: 'Apenas lançamentos pendentes podem ser editados.' },
+        { error: 'Apenas lançamentos pendentes ou divergentes podem ser editados.' },
         { status: 409 }
       )
     }
 
     const parsed = patchColaboradorSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+
+    // Em lançamento divergente, só função e quantidade podem mudar — os campos
+    // que identificam o trabalho (cores/marca/tamanho/data/parceiro) ficam travados.
+    if (entry.status === 'divergente') {
+      const soCamposCorrigiveis =
+        parsed.data.cores === entry.cores &&
+        parsed.data.marca === entry.marca &&
+        parsed.data.tamanho === entry.tamanho &&
+        parsed.data.data_producao === entry.data_producao &&
+        parsed.data.parceiro_id === entry.parceiro_id
+      if (!soCamposCorrigiveis) {
+        return NextResponse.json(
+          { error: 'Em um lançamento com divergência, só é possível corrigir a função e a quantidade. Fale com o administrador para outras alterações.' },
+          { status: 409 }
+        )
+      }
+    }
 
     const { data: updated, error: updateError } = await supabase
       .from('production_entries')
@@ -166,27 +187,10 @@ export async function PATCH(
 
     if (updateError) throw updateError
 
-    // Re-executa conferência automática com os novos dados (considera o parceiro atualizado)
-    const { data: espelho } = await supabase
-      .from('production_entries')
-      .select('id, quantidade')
-      .eq('quinzena_id', entry.quinzena_id)
-      .eq('colaborador_id', updated.parceiro_id)
-      .eq('parceiro_id', entry.colaborador_id)
-      .eq('data_producao', updated.data_producao)
-      .eq('marca', updated.marca)
-      .eq('tamanho', updated.tamanho)
-      .eq('status', 'pendente')
-      .neq('id', updated.id)
-      .maybeSingle()
-
-    if (espelho) {
-      const novoStatus = espelho.quantidade === updated.quantidade ? 'confirmado' : 'divergente'
-      await supabase
-        .from('production_entries')
-        .update({ status: novoStatus })
-        .in('id', [updated.id, espelho.id])
-      return NextResponse.json({ ...updated, status: novoStatus })
+    // Re-executa a conferência automática com os novos dados (quantidade + função)
+    const { matched, novoStatus, observacao } = await conferirEAtualizarPar(supabase, updated.id)
+    if (matched) {
+      return NextResponse.json({ ...updated, status: novoStatus, observacao })
     }
 
     return NextResponse.json(updated)
